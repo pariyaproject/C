@@ -2,9 +2,12 @@
 #include <iostream>
 using std::istream;
 using std::ostream;
+extern const int x = 10;
 int Bangumi_subject::Id()const
 {
-	return id;
+	//return id;
+	
+	return x;
 }
 
 int Bangumi_subject::DoNum()const

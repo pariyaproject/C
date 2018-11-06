@@ -6,6 +6,7 @@
 //关于iostream已经内置了条件编译宏用来防止重复定义
 #include <iostream>
 //bangumi条目类
+extern const int x ;
 class Bangumi_subject
 {
 public:
