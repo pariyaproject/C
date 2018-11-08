@@ -474,12 +474,15 @@ void test_vector() {
 	//iter1 - iter2 //两个迭代器之间的距离 中间的元素差个数 
 	//< > //
 	//begin()是指0下标
-	auto mid = strtest.cbegin() + strtest.size()/2;
+	auto mid = strtest.cbegin() + strtest.size() / 2;
 	string::difference_type difference = mid - strtest.cbegin(); //带符号的整形
 	//二分
 
 }
 //数组大小确定不变
+//char cha1[] = "c++";
+//char cha2[] = { 'c','+','+','\0' }; //结尾应当有一个空字符 可以将char[]看作c风格的string 即字符串字面值
+//char cha3[] = { 'c','+','+' }; //由于没有结尾的空字符 c++后输出很多 烫烫
 void test_array() {
 	using std::cout;
 	using std::endl;
@@ -487,8 +490,8 @@ void test_array() {
 	unsigned cnt = 45; //不是常量表达式
 	//int arr[cnt]; //错误
 	constexpr unsigned cnt1 = 45;
-	int arr[cnt1]; //可以
-	int arr2[sizeof(int)]; //可以
+	int arr[cnt1] = {}; //可以
+	int arr2[sizeof(int)] = {}; //可以
 	//和内置类型一样 在函数体内定义了某种类型的数组,默认初始化会含有未定义的值
 	//定义数组必须指定数组的类型 不能用auto
 	//auto xxx[] = { 1,1,1 };//报错
@@ -496,7 +499,109 @@ void test_array() {
 	//显示初始化数组元素(列表初始化)
 	int a3[5] = { 0,1,2 }; //等价 a3[]={0,1,2,0,0} 函数体外否则未定义
 	//cout << a3[4] << "  " << a3[5] << endl; //未定义值
+	//字符数组有一种额外的初始化方式,使用字符串字面值
+	char cha1[] = "c++";
+	char cha2[] = { 'c','+','+','\0' }; //结尾应当有一个空字符 可以将char[]看作c风格的string 即字符串字面值
+	char cha3[] = { 'c','+','+' }; //由于没有结尾的空字符 c++后输出很多 烫烫(函数体内是这样,外部尝试后正常输出c++)
+	cout << cha1 << endl;
+	cout << cha2 << endl;
+	//cout << cha3 << endl;
+	//const char a4[6] = "123456"; //错误  没有空间存放\0
+	//数组不允许拷贝和赋值(可能有些编译器支持赋值,但不是标准)
+	int *ptrs[10]; //10个int型指针的数组
+	//int &refs[10]; //错误  :不存在引用的数组
+	int arr3[10] = {};
+	int(*parray)[10] = &arr3; //指向一个含有10个整形的数组
+	int(&arrref)[10] = arr3; //引用一个含有10个int的array
+	//从里向外绑定 parray是一个指针 指向 int [10]
+	int *(&arrya)[10] = ptrs; // arrya是数组的引用 数组含有10个指针
+	//除了固定大小 其他和vector基本一致
+	unsigned scores[11] = {}; //array没有现有的迭代器类型(数组并不是一个类) 全部默认初始化为 0
+	//->注意 使用了{}初始化列表就是显示地默认初始化(等同于在函数体外定义并初始化)
+	//->但不加{}只是定义 unsigned scores[11]; 则为未定义值
+	for (auto i : scores) {
+		cout << i << endl;
+	}
+	//这与vector有点区别
+	std::vector<unsigned> scores2(11, 0);
+	//使用数组时,编译器一般会把其转换成指针
+	using std::string;
+	string nums[] = { "one","two","three" };
+	string *p = &nums[0];
+	string *p1 = nums; //两者等价
+	//**** 编译器自动替换nums为指向数组第一个元素的指针 ****
+	decltype(nums) x = {};//类型是 string[3];
+	auto x2(nums);//类型是 string*  ==x2(&nums[0])
+	//数组的迭代
+	cout << *(++p1) << endl; //从nums[0] 到 Nums[1]
+	//++根据指向的类型向后移动 sizeof(指向类型)个字节
+	//指针类型重写了++ 和 + 等等运算符
+	//判断结尾用尾后元素地址 这里是 nums[3]->指向不在的一个元素[尾元素是最后一个有效值]
+	//为了更加安全 c++ 11标准引用 begin end 函数
+	string *beg = std::begin(nums);
+	string *end = std::end(nums); //尾后指针不能直接使用 *
+	for (auto i = beg; i != end; ++i) {
+		cout << *i << endl;
+	}
+	//当然也有类似const_iterator的cbegin
+	const string *beg1 = std::cbegin(nums);
+	int ary[] = { 1,1,2,3,6,4 };
+	auto n = std::cend(ary) - std::cbegin(ary); //ary中元素的个数 类型是 ptrdiff_t标准库类型
+	//而迭代器中的类型是 vector::difference_type
+	cout << n << endl;
+	int nn = sizeof(ary) / sizeof(*ary);
+	cout << nn << endl; //也可得知元素个数
+	//ptrdif_t(带符号)和size_t一样定义在cstddef
+	//数组使用的是内置的下标运算(可以处理负值)
+	//vector的下标运算只支持无符号
 }
+//c风格字符串不是一种类型而是一种写法
+void test_c_cpp_string() {
+	//c-style string最后一个字符后跟上一个空字符'\0'(也占一个字符位)
+	//实际上c风格的字符串就是一个char的数组
+	using std::string;
+	using std::cout;
+	using std::endl;
+	string str = "abc";
+	const char co_str[] = "def";
+	char c_str[7] = "abc";
+	cout << sizeof(str) << endl; //40字节
+	cout << sizeof("abc") << endl; //4字节
+	//c style的操作函数
+	//返回长度 空字符不计
+	cout << strlen(co_str) << "  " << strlen("abc") << endl;
+	//strcmp(p1,p2)  相等为0 p1大于p2为正数
+	cout << c_str << "  " << sizeof(c_str) << " " << strlen(c_str) << endl;
+	//输出 abc 7 3
+	cout << c_str[5]; // \0空字符
+	strcat(c_str, co_str);
+	cout << c_str << endl;//参数一不能是const 将2附加到1并返回1
+	//->这个操作会引发中断,原因是c_str没有足够的空间 因此声明c_str[7]
+	strcpy(c_str, co_str); // 将2拷贝给1 返回1
+	cout << c_str << endl; //确保1的内存空间足够
+	//对于一个string对象比较直接使用 < > (重写了操作符) 
+	//而对于c风格的使用 < > 比较的是指针,而非字符串本身 当然 + -也不能使用(实际是两个不相关的指针的运算) 必须使用strcmp
+
+	//任何出现字符串字面值的地方都可用空字符结束的字符数组来替代
+	//标准库string提供一个s_str()来初始化 const char* (不能是const char[]函数只能返回指针) (c风格)[]
+	const char *xx = str.c_str();
+	//char xxx[] =
+	cout << xx << endl; //注意 char类型的指针使用<<流时会一直输出到\0为止
+	//因为是一个指针,无法保证c_str()返回的值一直有效
+	str = "ddd";
+	cout << xx << endl; //输出ddd
+	//使用数组初始化vector对象
+	int int_arr[] = { 0,1,2,3,4,5,6 };
+	//注意 所有的end都是指尾后元素(不存在定义内容)
+	std::vector<int> ivec(std::begin(int_arr)+1, std::end(int_arr)-1);
+	for (auto i = ivec.begin(); i != ivec.end(); ++i) {
+		cout << *i << endl;
+	}
+	//尽量使用标准库而非数组
+	//多维数组 数组的数组
+}
+
+
 
 
 int main() {
@@ -520,7 +625,8 @@ int main() {
 	//cout << "end"; //using在块位域中声明只在其中有效
 	//test_string();
 	//test_vector();
-	test_array();
+	//test_array();
+	test_c_cpp_string();
 	system("pause");
 	return 0;
 }
