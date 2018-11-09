@@ -593,7 +593,7 @@ void test_c_cpp_string() {
 	//使用数组初始化vector对象
 	int int_arr[] = { 0,1,2,3,4,5,6 };
 	//注意 所有的end都是指尾后元素(不存在定义内容)
-	std::vector<int> ivec(std::begin(int_arr)+1, std::end(int_arr)-1);
+	std::vector<int> ivec(std::begin(int_arr) + 1, std::end(int_arr) - 1);
 	for (auto i = ivec.begin(); i != ivec.end(); ++i) {
 		cout << *i << endl;
 	}
@@ -614,7 +614,7 @@ void test_c_cpp_string() {
 	//二维数组的for
 	//传统方法 两个for嵌套
 	//c++11 range for
-	for (auto &i : ia) { 
+	for (auto &i : ia) {
 		for (auto &j : i) {
 			j = 1;
 		}
@@ -672,7 +672,235 @@ void test_basic() {
 	//优先级规定,g()的返回值和h()的返回值相乘
 	//结合律规定,f()的返回值先与g()和h()的乘积相加,结果再与j()的返回值相加
 	//对于这些函数的调用顺序没有明确规定
-	//如果它们都是无法函数(同一对象的改变,IO任务),则调用顺序不受限制,反之则未定义行为
+	//如果它们都是无关函数(同一对象的改变,IO任务),则调用顺序不受限制,反之则未定义行为
+	//因此一个表达中最好不要有对同一对象的更改操作*++iter没有问题 ++总先运算
+	//取模运算对象必须是整数
+	//c++11规定商一律向0取整(直接切除小数部分)
+	//m n为整数且n!=0 m==(m/n)*n+m%n
+	//m%(-n) == m%n  (-m)/n == m/(-n) == -(m/n)
+	//<= >= < >优先级大于== !=
+	//&&当且仅当两个运算对象都为真时结果为真||只要一个为真即为真
+	//两者都是先求左侧运算对象的值当且仅当左侧无法确定表达式的值时才会计算右侧的运算值
+	//->这种策略叫 短路求值
+	//赋值运算符的左侧对象必须是一个可修改的左值
+	int ii = 0, j = 0;//初始化而非赋值
+	const int ci = ii;//初始化而非赋值
+	//i+ j =k; //错误 算数表达式是右值
+	//k = {3.14}; //错误 窄化转换 {}类型要求一致
+	//如果初始化列表{}为空 则值初始化创建一临时是并将其赋缎带左侧运算对象
+	//赋值运算满足右结合律 不同其他二元运算符 其优先级较低
+	//复合运算符求值次数只有一次 而普通的需要两次 +=
+	//递增 递减运算符
+	//前置版本将对象本身作为左值返回(推荐) 后置版本则将对象原始值的副本(消耗)作为右值返回
+	//后置的使用例子 *pbeg++
+	//后置递增运算符优先级高于解引用运算符
+	//std::string s;
+	//std::string::iterator beg = s.begin();
+	//while (beg != s.end() && !std::isspace(*beg)) {
+	//	*beg = std::toupper(*beg++); //未定义,右侧改变了beg 左侧又使用了beg
+	//	//可能先求 = 号 右侧的值  也可能先求 左侧的值
+	//}
+	//解引用运算符的优先级低于点运算符 (*p).size()
+	//条件运算符 ?: 满足右结合律 优先级非常低
+	//在输出表达式中使用?:
+	int grade = 70;
+	cout << ((grade < 60) ? "fail" : "pass") << endl; //pass or fail
+	cout << (grade < 60) ? "fail" : "pass";//输出1 或 0
+	//cout << grade < 60 ? "fail" : "pass" ; //错误 试图比较cout 和 60
+	//后两者后再加<<endl 直接也错误
+	//位运算符作用于整数类型,并把运算对象看成是二进制位的集合,位运算提供检查和设置二进制位的功能
+	//名为  bitset 的标准库类型也可以表示任意大小的二进制位的集合,因此也能用位运算符
+	//符号位没有明确的规定 强烈建议用于无符号类型
+	//~ 位求反 0=>1 1=>0
+	//<< >> 左移 右移 IO那里进行了重载,这里首先令左侧运算对象的内容按照右侧要求移动指定位数,移动后的(可能进行提升)左侧运算对象的拷贝作为求值的结果,右侧对象一定不能为负,并且必严格小于结果的位数,否则会产生未定义行为,二进制移出边界之外的被舍弃
+	//& 位与
+	//^ 位异或
+	//| 位或
+	//0开关的整数代表 八进制 0x 代表十六进制
+	cout << "char size: " << sizeof(char) << endl; //1字节
+	cout << "int size: " << sizeof(int) << endl; //4字节
+	unsigned char bits = 0233; //10011011
+	//bits << 8;//bits提升成int 然后左移8位
+	//00000000 00000000 10011011 00000000
+	//bits << 31;//超出边界 丢弃
+	//10000000 00000000 00000000 00000000
+	//bits >> 3; //向右移动3 注意右移插入与符号位相关的值
+	//00000000 00000000 00000000 00010011
+	unsigned char bits1 = 0227; //10010111
+	//~bits1;//char类型首先要提升成int类型
+	//11111111 11111111 11111111 01101000
+	1UL << 27; //生成一个只有27位是1 的unsigned long ,int只能确保有16位
+	unsigned long students = 0;
+	students |= 1UL << 27;
+	students &= ~(1UL << 27);
+	bool status = (students & (1UL << 27)) == 1;
+	//移位运算<< >>又叫IO运算符 满足左结合律  优先级介于 算术和关系运算符之间
+	//sizeof运算符 满足右结合律返回值 size_t类型 优先级=*
+	sizeof(int); //也可不加()
+	int x = 0, *px = nullptr;
+	sizeof x; //返回表达式的类型的大小 
+	sizeof *px; //返回int的类型大小 即使px是一个无效指针也没事(只用类型)
+	cout << "x " << sizeof x << " *px " << sizeof *px << endl;
+	//c++ 11新标准允许使用作用域运算符来获取类成员的大小
+	//sizeof运算不会把数组转换成指针来处理 因此返回数组的大小
+	int array_int[10] = {};
+	constexpr size_t sz = sizeof array_int / sizeof *array_int;
+	int arr2[sz] = {};
+	//逗号运算符 按从左到右的顺序依次求值
+	//先对左侧的表达式求值 然后将结果丢弃掉,逗号运算的真正结果是右侧表达式的值
+	using std::vector;
+	vector<int> ivec;
+	vector<int>::size_type cnt = ivec.size();
+	//...
+	//类型转换
+	int ival = 3.541 + 3;//提示精度损失  (隐式转换) 3=>double +3.541  6.541 => int =6
+	//何时发生类型转换 p141
+	//算术转换 把算术类型转换成另一种算术类型如果一个运算对象的类型是long double 那么不论另一个运算对象的类型是什么都会转换成long double
+	//整数提升 把小整数转换成较大的整数类型 只要所有可能的值能放在int就提升否则unsigned int
+	short a1 = 1, a3 = 2;
+	char a2 = 5;
+	cout << "a1+a2: " << sizeof(a1 + /*+ a2 +*/a3) << endl; //已经整数提升了
+	//其他的隐式类型转换
+	//数组转换成指针 [注意:当用在& sizeof typeid 时不会转换成指针]
+	int ia[10];
+	int *ip = ia;
+	//指针的转换 0 nullptr转换成任意类型的指针 指向任意非常量的指针能转换成void* 常量的是 const void*
+	//转换成布尔
+	//转换成常量
+	//类类型定义的转换 字符串字面值转换成string cin=>布尔值
+	//显示转换
+	//强制类型转换(非常危险)
+	//一个命名的强制类型转换有如下形式
+	//cast-name<type>(expression);
+	//type是目标类型 expression是需要转换的值 结果是左值
+	//cast-name有 static_cast dynamic_cast(运行时类型识别)  const_cast 和 reinterpret_cast
+	//static_cast任何具有明确定义的类型转换,只要不包含底层const 都可以使用
+	int i1 = 1, j1 = 2;
+	double slop = static_cast<double>(i1) / j1; //使表达式执行浮点数除法
+	//利用 static_cast 可以找回存在于void*的指针
+	//const_cast只能改变运算对象的底层const
+	const char *pcc = "123";
+	char *p = const_cast<char*>(pcc); //正确 但是通过p写值是未定义行为 
+	//称为去掉const性质 如果对象本身不是一个常量对这样操作后的对象是可以进行写的,否则会未定义
+	//只有const_cast能改变表达式的常量属性,但const_cast不能改变表达式的类型
+	//reinterpret_cast通常为运算对象的位模式提供较低层次上的重新解释(非常危险)
+	int *iip = 0;
+	char *pc = reinterpret_cast<char*>(iip);
+	//但需要牢记pc所指的真实对象是一个int而非char
+	//string str(pc); //运行时可能错误
+	//旧式强制类型转换
+	//type(expr)
+	//(type)expr
+	//旧式分别具有与const_cast static_cast reinterpret_cast相似的行为
+	//如果能替换成const_cast static_cast,则行为和对应的命名转换一致 否则与reinterpret_cast类似
+	//p147运算符优先级表
+
+}
+//语句
+void test_statement() {
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	//c++语句都以分号结束 末尾别上;
+	//空语句
+	;
+	//例如
+	//int my_input;
+	//while (cin >> my_input)
+	//	; //空语句
+	//复合语句 => 块 在block内引入的名字只能在块中访问(定义到块尾)
+	//函数体内是可以随便定义一个块{} 外部需要提供名等 块不以分号结束
+	//空块==空语句
+	{}
+	//语句作用域
+	//if switch
+	//悬垂else c++中规定else与离它最近的尚未匹配的if匹配
+	int x = 0;
+	//while (cin >> x) {
+	switch (x)
+	{
+	case 100:
+		cout << "ok" << endl;
+		//std::string name; //错误 控制流绕过一个隐式初始化值
+		//int cc = 1; //错误 控制流绕过一个显示初始化值
+		{
+			std::string name = "ddddd"; //定义在一个块中
+		}
+		int c; //正确 因为c没有被初始化
+		break; //注意一但匹配 以下语句都执行 因此使用break;中断
+
+	default:
+		c = 10; //正确
+		//cc = 1;//错误 控制流绕过一个显示初始化值
+		//name = "d"; //错误 控制流绕过一个隐式初始化值
+		cout << "no" << endl;
+		break;
+	}
+
+	//}
+	//break作用中断当前控制流上个例子中将控制权转移到了switch语句外面 
+	//case关键字和它对应的值必须是整型常量表达式 两个case不能一样
+	//case语句可以写在一行 case 'a':case 'e':
+	//如果在case中有定义 : c++规定 不允许跨过变量的初始化语句直接跳转到该变量作用域的另一个位置
+	//因此如果需要为某个case分支定义并初始化一个变量 应当定义在块内 从而确保后面的所有case标签都在变量的作用域之外
+	//迭代语句
+	//跳转语句
+	//break 语句 负责终止离它最近的while do_while for switch语句
+	//continue 语句 终止最近的循环中的当前迭代并立即开始下一次的迭代 只能出现在 for while do_while
+	//goto 语句是无条件跳转到同一函数内的另一条语句
+	//不要使用goto
+	//语法: goto label; label是用于标识一条语句的标示符
+	//end : return; //带标签语句,可以作为goto的目标
+	//标签标示符独立于变量或其他标示符名字, 和switch类似 goto语句不能将程序的控制权从变量的作用域之外转移到作用域之内
+	goto end;
+	int ix = 10; //错误 goto绕过了一个带初始化的变量的定义 //实际没有报错
+end:
+	ix = 42;
+	cout << ix << endl;
+	//如果向前跳转(变量定义之前)意味着系统将销毁该变量 然后重新创建它
+}
+int test_exception(){
+	//try语句块和异常处理
+	//c++中异常处理包括
+	//throw 表达式 引发异常
+	//try 语句块 处理异常,以一个try关键字开始,并以一个或多个catch子句结束
+	//一套异常类 用于在throw表达式和相关的catch子句之间传递异常信息
+	//抛出一个异常将终止当前的函数,并把控制权转移给能处理该异常的代码
+	//runtime_error定义在stdexcept头文件中
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	const unsigned password = 123456;
+	unsigned int input;
+	while (cin >> input) {
+		if (password != input) {
+			throw std::runtime_error("An error password!");
+			
+		}
+		cout << "Welcome~";
+		return 0;
+	}
+	return -1;
+	//try语句块中 当选定了一个catch子句处理异常之后,执行与之对应的块,
+	//catch一旦完成,程序跳转到try语句最后一个catch子句之后的那条语句继续执行
+	//try内声明的变量在块外部无法访问,特别是在catch子句内也无法访问
+
+	//try中也可能调用了try
+	//寻找处理代码的过程与函数调用链相反,
+	//当异常被抛出时,首先搜索抛出该异常的函数.如果没有找到匹配的catch子句,终止该函数,并在
+	//调用该函数的函数中继续寻找.如果还没有,依此类推直到找到为止.
+	//最终没能找到任何匹配的catch子句,程序转到名为terminate的标准库函数,该函数的行为与系统有关
+	//一般情况下导致程序非正常退出,没有try语句的也用这种方式处理
+	//异常类
+	//exception 头文件 最通用的,只报告异常的发生
+	//stdexcept 头文件 定义了几种常用的异常类
+	//new 头文件 定义了bad_alloc异常类
+	//type_info 头文件 定义了bad_cast异常类
+
+	//我们只能以默认初始的方式初始化exception,bad_alloc,bad_cast对象,不允许提供初始值
+	//其他异常类型的行为则恰好相反,应该使用string对象或者c风格字符串初始化这些类型的对象
+	//但是不允许使用默认初始化的方式(必须显示初始化)没有默认的构造函数
+	//what返回的值取决于自身是否存储一个字符串 否则内容由编译器决定
 
 }
 
@@ -699,7 +927,16 @@ int main() {
 	//test_vector();
 	//test_array();
 	//test_c_cpp_string();
-	test_basic();
+	//test_basic();
+	//test_statement();
+	try {
+		test_exception();//执行测试代码
+		//若失败则抛出异常
+	}
+	catch (std::runtime_error re) {
+		std::cout << re.what(); //输出异常(runtime_error)的信息
+		//what()返回c风格的字符串(const char*)
+	}
 	system("pause");
 	return 0;
 }
