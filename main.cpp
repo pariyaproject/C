@@ -903,10 +903,316 @@ int test_exception(){
 	//what返回的值取决于自身是否存储一个字符串 否则内容由编译器决定
 
 }
+//函数 : 是一个命名了的代码块
+//典型的函数定义包括以下部分: 返回类型,函数名字,0+个形参以及函数体
+//调用函数完成两项工作:1..实参初始化函数对应的形参 2..控制权转移给被调用函数 (主函数的执行被暂时中断)
+//注意参数调用没有规定实参的初始化顺序
+//提供的实参必须能转换成对应形参的类型(隐式 显式)
+//隐式的空形参:() 显式的空形参(void)[兼容c]
+//(int v1,v2) 错误  (int v1,int v2)正确
+//形参不能重名 并且函数最外层作用域中的局部变量也不能使用与函数形参一样的名字
+//函数的返回类型不能是数组类型或函数类型 但可以是指向数组或函数的指针
+
+std::string::size_type find_char(const std::string &s)
+{
+	return 0;
+}
+int a;//可以重名 因为不属于函数的作用域 
+void test_func(int a ) {
+	//int a;//不能重名 //因此形参的定义实际相当于在块的刚开始
+	{
+		int a = 0; //可以重名 不是最外层的作用域
+	}
+	//c++中名字有作用域 对象有生命周期
+	//函数是一个语句块 块构成一个新的作用域,形参和函数体内部定义的变量统称为局部变量
+	//仅在函数的作用域内可见,局部变量还会隐藏在外层作用域中同名的其他所有声明中
+	//在所有函数体之外定义的所有变量在启动时被创建 直到程序结束都会销毁,局部变量的生命周期依赖于定义的方式
+
+	//自动对象
+	//对于普通局部变量对应的对象来说,当函数的控制路径经过变量定义语句时创建该对象
+	//当到达定义所在的块末尾时销毁它:只存在于块执行期间的对象称为自动对象,结束后对象的值变成未定义
+	//形参是一种自动对象,函数开始时申请存储空间,因为定义在函数体作用域之内,一旦结束形参销毁
+	//对于局部变量对应的自动对象来说,则分为两种情况:变量定义本身含有初始值,应用这个初始值进行初始化,否则执行默认初始化
+	//这意味着内置类型的未初始化局部变量将产生未定义值
+
+	//静态局部变量
+	//生命周期贯穿函数调用及之后的时间,定义为static类型
+	//这样的静态变量在程序的执行路径第一次经过对象定义语句时初始化,并且直到程序终止才被销毁
+	//在此期间即使对象所在的函数结束执行也不会对它有影响(声明=>只公布名字 定义=>申请空间 初始化=>赋值)
+	//如果静态局部变量没有显式的初始值,它将 执行值初始化,内置类型的局部静态变量初始化为0
+	
+	//函数的名字必须声明在使用之前,类似于变量 函数只能定义一次,但可以多次声明
+	//函数的声明和定义的区别 声明无函数体,用一个分号代替即可
+	//因为声明不包括函数体,形参可以只写类型不写变量名
+	//函数的声明也叫函数原型(返回类型 函数名 形参类型)
+	//函数声明写在头文件 定义写在包含了这个头文件的源文件中 (推荐)
+	//分离式编译允许把程序分割到时几个文件中去,每个文件独立编译
+	//更改了一个源文件只需重新编译更改过的即可
+	//分离编译:各个cpp分开编译生成各自的obj目标文件(.o .obj) [include将文件的代码直接拷到了.cpp中]
+	//编译之后是连接 Link 将未定义的符号尝试找到外部定义并将调用地址替换为函数实际地址
+	
+	//形参的初始化和变量的初始化一样
+	//形参可以是引用 否则是拷贝传值(两者是相互独立的对象)
+	//指针形参,也是拷贝传值,两个指向相同对象的独立的指针
+	//尽量使用引用避免拷贝: 大的类型对象低效 有些类型不支持拷贝操作
+	//当函数无须改变引用形参的值 最好使用const
+	//通过引用参数可以通过一个函数调用返回多个值,直接更改引用参数的值(隐式返回)
+
+	//const 形参(顶层)比如 func(const int *p); 是可以在函数体内进行*p=0;的操作,但是不能 p=x;
+	//和其他初始化一样,当用实参初始化形参时会忽略顶层const
+	//例子: void func(int x);
+	//     void fun(const int x); //错误重复定义 顶层const被忽略,
+	const int b = 0;  //常量int
+	const int * aa = {}; //指向const int的非常量指针
+	const int * const c = b; //指向const int 的 const 指针
+
+	//a = &b;
+	//函数重载不能出现只是返回值不同的情况
+	//尽量使用const 引用 形参这样也能接收更多的参数,因为不能将const赋值给非const的形参
+	std::string x = "ddd";
+	const std::string cc = "ccc";
+	find_char(x);
+	find_char(cc); //只有 const string& 才合法
+	find_char("ddd"); //只有 const string& 才合法
+	//实参赋值完全可以看成一个普通的初始化语句 string &s = x;const string &s = "ddd"
+
+
+	//数组形参
+	//不能拷贝数组 + 使用数组时(通常)会将其转换成指针
+	//不能以值传递的方式使用数组参数 + 当传递一个数组时,实际上传递的是指向数组首元素的指针
+	//尽管不能值传递数组,形参仍能写成数组的形式
+	//以下等价
+	//void x(const int*);
+	//void x(const int[]);
+	//void x(const int[10]); //这里只是期望的10个元素 ,实际不一定是10个
+	//以上任意一个调用实际检查参数的类型是否是 const int*
+
+	//因为传递的是指针,不能得知数组的长度
+	//常用的三种常用的技术
+	//1.使用标记指定数组长度:例子c风格的字符串 结尾有结束标记 \0 while(*p)//*不是空字符
+	//2.使用标准库规范:传递指向数组的首元素和尾后元素 while(beg!=end){} 实参可用begin() end()获得
+	//3.显示传递一个表示数组大小的形参
+	
+	//形参也可是数组的引用
+	//void func(int (&array)[10] x){}
+	//int &arr [10] //错误 将arr声明成了引用的数组 而且根本不存在一个引用的数组
+	//使用数组的引用限制了函数的可用性 只能作用于大小为10的int数组
+	//传递多维数组
+
+	//main处理命令行选项
+	//给main传递参数int main (int argc, char *argv[])
+	//第二个参数是一个数组,它的元素是指向C风格字符串的指针,第一个形参表示数组中字符串的数量
+	//当实参传给main之后 argv的第一个元素指向程序的名字或者一个空字符串.最后一个元素值保证为0
+	//因此使用以上参数时一定记得可选的实参从argv[1]开始,argv[0]保存程序的名字,而非用户的输入
+
+	//c++11
+	//含有可变形参的函数 
+	//initializer_list形参: initializer_list是一种标准库类型,定义在同名的头文件中
+	//initializer_list<T> lst; 默认初始化 T类型的元素空列表
+	//initializer_list<T> lst{a,b,c,d}; lst的元素数量和初始值一样多[lst中元素是对应初始值的副本,列表中的元素是const]
+	//lst2(lst) lst2 = lst 拷贝或赋值一个initializer_list对象不会拷贝列表中的元素;拷贝后原始列表和副本共享元素
+	//lst.size() 元素数量
+	//lst.begin() 首元素的指针
+	//lst.end() 尾后元素指针
+	//和vector类似也是模板类型,两者区别initializer_list中的元素永远是常量
+	//void error_msg(int time, std::initializer_list<std::string> il) {
+	//	for (auto beg = il.begin(); beg != il.end(); ++beg) {
+	//		std::cout<<*beg<<std::endl;
+	//	}
+	//}
+	//使用时使用须把序列放入花括号中
+	// std::string x ="";
+	// error_msg(5,{"string1", "string2", x});
+	//省略符形参是为了便于C++程序访问某些特殊的c代码而设置的,
+	//这些代码使用了名为varargs的c标准库功能
+	//省略符形参应该仅仅用于c和c++通用的类型,大多数类类型对象在传递给省略符形参时都无法正确拷贝
+	//只能出现在形参列表的最后一个位置
+	//void foo(parm_list,...);
+	//void foo(...);
+	//其实也有点复杂 麻烦,仍需要得知具体类型做好正确的类型识别
+
+	//返回类型和return语句
+	//有返回值的函数返回值须同返回类型一致或能隐式转换的
+	//返回一个值的方式和初始化一个变量或形参的方式完全一样:返回的值用于初始化调用点的一个临时量
+	//如果返回一个引用则不进行拷贝
+	//不要返回局部对象的引用或指针
+	//const string& example(){
+	//std::string ret = "";
+	//if (ret.empty()) {
+	//	return ret; //错误 : ret是局部对象 不能返回局部对象的引用
+	//}
+	//else {
+	//	return "XXXX"; //错误 : "XXXX"是一个局部临时量 不能返回(字体串字面值转换成一个局部临时string变量(隐式转换成返回类型))
+	//}}
+
+	//调用运算符也有优先级和结合律 优先级和点运算符,箭头运算符一样 符合左结合律
+	//因此 auto sz = shorterString(s1, s2).size();
+	//引用返回左值 
+	
+	//c++ 11 列表初始化返回值
+	//函数可以返回花括号包围的值的列表,类似于其他返回结果,此处的列表也用来对表示函数返回的临时量进行初始化
+	//std::vector<int> process() {
+	//	int x = 1;
+	//	if (x < 0) {
+	//		return{}; //临时量执行值初始化 //返回一个空vector对象
+	//	}
+	//	else if (x == 0) {
+	//		return{ 1,2 }; //返回列表初始化的vector对象
+	//	}
+	//	else {
+	//		return{ 0, 1 };
+	//	}
+	//}
+	//当然不仅限于vector; int x = {0};也可以用花括号的形式返回
+
+	//main函数的返回值(隐式插入了一条return 0;)
+	//main函数的返回值可以看作是状态指示
+	//也可用cstdlib头文件中定义的两个预处理变量表示成功或失败
+	//return EXIT_FAILURE; return EXIT_SUCCESS;
+	//预处理变量不能加 std:: 也不能用using声明
+
+	//递归
+	//如果一个函数调用了它自身,不管直接间接都叫做递归函数
+	//递归函数中一定有某条路径是不包含递归调用的 否则直到程序栈空间耗尽
+
+	//返回数组指针(使用类型别名可以简化操作)
+
+
+}
+//尾置返回类型
+typedef int int_T[10];
+//等价
+//int_T* test_return_array(int (&x)[10]) 
+//尾置返回类型 c++11
+//int (* test_return_array(int (&x)[10]))[10] 
+auto test_return_array(int (&x)[10]) -> int(*)[10] //不知什么原因会提示无法找到函数定义(编译没问题),忽略之
+{
+	//int x[10] = {};
+	//int(*y)[10] = &x;
+	for (auto i = std::begin(x); i != std::end(x); ++i) {
+		*i += 1;
+	}
+	return &x;
+};
+//也可使用decltype
+
+//函数重载
+//如果同一个作用域(不同作用域会隐藏外面的名字)内的几个函数名字相同但形参列表不同=>重载函数
+//编译器会根据传递的实参类型推断想要的是哪个函数
+//main函数不能重载
+//假如有两个函数只有返回类型不同,则后定义的是错误的
+//一个拥有顶层const的形参无法和另一个没有顶层const的形参区分开来
+void adsfadsf(int) {};
+//void adsfadsf(const int) {}; //错误 重复
+
+void adsfadsf(int *) {};
+//void adsfadsf(int * const) {}; //错误 重复
+
+//当有两个如下一个const 一个非const的重载,当传递一个非常量参数会优先选择非常量的函数版本
+
+void sdsdsdsds(int &) {};
+void sdsdsdsds(const int &) {};
+//void sdsdsdsds(int const &) {}; //和上面的语句一样
+//[注意:引用不是一个对象,所以引用本身不存在const不const][int & const 这个写法也是错误的]
+
+void sdsdsdsds(int*) {};
+void sdsdsdsds(const int*) {};
+
+//const_cast在重载函数的情景中最有用
+const int & test_const_over(const int &x) {
+	return x;
+}
+//重载一个非const版本
+int & test_const_over(int &x) {
+	auto &r=test_const_over(const_cast<const int&>(x));
+	//注意不能返回一个局部变量(返回了一个别名,实际还是那块内存,相当于原变量,因此auto类型为int不是int&)
+	return const_cast<int &>(r);
+}
+//调用重载函数
+//函数匹配也叫重载确定,首先比较每个形参
+//当调用重载函数有三种可能的结果:最佳匹配 无匹配 二义性调用 
+
+//不好的习惯: 通常来说在局部作用域中声明函数不是一个好的选择
+//[除此之外,外部定义一个read()函数,内作用域定义一个int read则会隐藏外部的]
+//在局部新声明的与作用域外的同名函数会被隐藏(包括所有的重载,只有作用域内的可以被调用)
+
+//在c++中名字查找发生在类型检查之前
+
+//特殊用途语言特性
+//默认实参,只能在形参表的最右,并且第一个默认起后面全部都是默认参数
+void test_default_param(int y, std::string x = "aaaa~") {
+	using std::cout;
+	cout << x;
+}
+//默认实参声明,在给定的作用域中一个形参只能被赋予一次默认实参
+//也就是说函数的后续声明只能为之前那些没有默认值的形参添加实参
+//例如
+void test_default_param_1(int x, int y, int c, int d = 1);
+void test_default_param_1(int x, int y, int c = 2, int d);//不能写 int d=1 或者 d =0
+//int c= 2是一个补充 也可不补充
+//局部变量不能作为默认实参,只要表达式的类型换成形参所需的类型,表达式就能作为默认实参
+int return_int(int x = 1) {
+	return x;
+}
+int asdfs = 10;
+//注意默认实参的求值是发生在函数调用时的,因此默认实参会随着变量和函数返回值的更改而更改
+void test_default_param_1(int x = asdfs, int y = return_int(), int c, int d) {};//不能写 int d=1 或者 d =0
+
+
+//内联函数和constexpr函数
+//内联函数可以避免函数调用的开销
+//关键字inline 不一定百分百是inline(只是请求,决定的仍是编译器)
+//一般用于优化规模小 流程直接,调用频繁的函数
+
+//constexpr是指能用于常量表达式的函数=>规定返回类型及所有形参的类型都是字面值类型
+//而且函数体内只有一条return语句
+constexpr int new_sa() { return 45;  }
+constexpr int dssdfdsfds = new_sa();//正确 foo是一个常量表达式
+//允许constexpr函数的返回值并非一个常量
+//constexpr为了能编译过程中随时展开,被隐式地指定为内联函数
+//int arr[sacle(2)]; //正确 scale(2)是常量表达式
+//int arr[sacle(i)]; //错误 不是constexpr
+//注意:如果用在非常量上 sacle(i)返回非常量不出错,因此constexpr函数不一定返回常量表达式
+//它只是额外具有能返回常量表达式的一面
+
+//和其他函数不同,内联函数和constexpr函数可以在程序中多次定义,但多个定义必须完全一致
+//因此内联函数和constexpr函数通常定义在头文件
+
+//调试帮助
+void test_debug() {
+	//程序员会用到一种类似于头文件保护的技术,以便有选择地调试代码
+	//程序发布要屏蔽高度代码,用到两项预处理功能:assert和NDEBUG
+	//assert是一种预处理宏(相当于预处理变量)行为有点类似于内联函数,assert宏使用一个表达式作为它的条件
+	//assert(expr); 首先对expr求值如果为假(0),输出信息并终止程序的执行,否则什么都不干
+	//它定义在cassert头文件中,预处理名字由预处理器而非编译器管理
+	//因此无需提供using or std::
+	//和预处理变量一样宏名必须唯一,含有cassert头文件的程序不能再定义名为assert的变量,函数等
+	//很多其他头文件也包含了它
+	//assert宏学用于检查"不能发生"的条件 assert(word.size())>threshold);
+
+	//assert的行为依赖于一个名为NDEBUG的预处理变量的状态,如果定义了NDEBUG,则assert什么也不做
+	//默认状态下没有定义NDEBUG 定义后能避免检查各种条件所需的运行时开销
+
+	//不能用assert代替逻辑 错误等检查
+	//也可用这个预处理变量定义自己的调试代码
+//#define NDEBUG
+#ifndef NDEBUG
+	//__func__是编译器定义的一个局部静态变量,用于存放函数的名字
+	//__func__每个函数都有定义 const char的静态数组
+	std::cerr << __func__ << ": error" << std::endl;
+	//__FILE__ 存放文件名的字符串字面值
+	//__LINE__ 存放当前行号的整形字面值
+	//__TIME__ 存放文件编译时间的字符串字面值
+	//__DATE__ 存放文件编译日期的字符串字面值
+#endif
+
+}
+//函数匹配
 
 int main() {
 	//输入输出
 	//cin_cout_cerr_clog();
+
 	///*/*xx*/xxxx*/会报错
 	//以上原因是/**/不能嵌套
 	//注释问题
@@ -929,14 +1235,26 @@ int main() {
 	//test_c_cpp_string();
 	//test_basic();
 	//test_statement();
-	try {
-		test_exception();//执行测试代码
-		//若失败则抛出异常
-	}
-	catch (std::runtime_error re) {
-		std::cout << re.what(); //输出异常(runtime_error)的信息
-		//what()返回c风格的字符串(const char*)
-	}
+	//try {
+	//	test_exception();//执行测试代码
+	//	//若失败则抛出异常
+	//}
+	//catch (std::runtime_error re) {
+	//	std::cout << re.what(); //输出异常(runtime_error)的信息
+	//	//what()返回c风格的字符串(const char*)
+	//}
+	//测试返回数组
+	//int x[10] = { 0,1,2,3 };
+	//for (auto i : x) {
+	//	std::cout << i << " ";
+	//}
+	//std::cout << std::endl;
+	//int (*y)[10] = test_return_array(x);
+	//for (auto i : *y) {
+	//	std::cout << i << " ";
+	//}
+	//std::cout << std::endl;
+	test_debug();
 	system("pause");
 	return 0;
 }
