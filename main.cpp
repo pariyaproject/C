@@ -5,6 +5,7 @@
 //包含来自标准库的头文件时使用<>否则""
 //class
 #include "bangumi_subject.h"
+#include "Test_class.h"
 //extern const int x ;
 //输入输出
 void cin_cout_cerr_clog() {
@@ -859,7 +860,7 @@ end:
 	cout << ix << endl;
 	//如果向前跳转(变量定义之前)意味着系统将销毁该变量 然后重新创建它
 }
-int test_exception(){
+int test_exception() {
 	//try语句块和异常处理
 	//c++中异常处理包括
 	//throw 表达式 引发异常
@@ -875,7 +876,7 @@ int test_exception(){
 	while (cin >> input) {
 		if (password != input) {
 			throw std::runtime_error("An error password!");
-			
+
 		}
 		cout << "Welcome~";
 		return 0;
@@ -918,7 +919,7 @@ std::string::size_type find_char(const std::string &s)
 	return 0;
 }
 int a;//可以重名 因为不属于函数的作用域 
-void test_func(int a ) {
+void test_func(int a) {
 	//int a;//不能重名 //因此形参的定义实际相当于在块的刚开始
 	{
 		int a = 0; //可以重名 不是最外层的作用域
@@ -940,7 +941,7 @@ void test_func(int a ) {
 	//这样的静态变量在程序的执行路径第一次经过对象定义语句时初始化,并且直到程序终止才被销毁
 	//在此期间即使对象所在的函数结束执行也不会对它有影响(声明=>只公布名字 定义=>申请空间 初始化=>赋值)
 	//如果静态局部变量没有显式的初始值,它将 执行值初始化,内置类型的局部静态变量初始化为0
-	
+
 	//函数的名字必须声明在使用之前,类似于变量 函数只能定义一次,但可以多次声明
 	//函数的声明和定义的区别 声明无函数体,用一个分号代替即可
 	//因为声明不包括函数体,形参可以只写类型不写变量名
@@ -950,7 +951,7 @@ void test_func(int a ) {
 	//更改了一个源文件只需重新编译更改过的即可
 	//分离编译:各个cpp分开编译生成各自的obj目标文件(.o .obj) [include将文件的代码直接拷到了.cpp中]
 	//编译之后是连接 Link 将未定义的符号尝试找到外部定义并将调用地址替换为函数实际地址
-	
+
 	//形参的初始化和变量的初始化一样
 	//形参可以是引用 否则是拷贝传值(两者是相互独立的对象)
 	//指针形参,也是拷贝传值,两个指向相同对象的独立的指针
@@ -992,7 +993,7 @@ void test_func(int a ) {
 	//1.使用标记指定数组长度:例子c风格的字符串 结尾有结束标记 \0 while(*p)//*不是空字符
 	//2.使用标准库规范:传递指向数组的首元素和尾后元素 while(beg!=end){} 实参可用begin() end()获得
 	//3.显示传递一个表示数组大小的形参
-	
+
 	//形参也可是数组的引用
 	//void func(int (&array)[10] x){}
 	//int &arr [10] //错误 将arr声明成了引用的数组 而且根本不存在一个引用的数组
@@ -1048,7 +1049,7 @@ void test_func(int a ) {
 	//调用运算符也有优先级和结合律 优先级和点运算符,箭头运算符一样 符合左结合律
 	//因此 auto sz = shorterString(s1, s2).size();
 	//引用返回左值 
-	
+
 	//c++ 11 列表初始化返回值
 	//函数可以返回花括号包围的值的列表,类似于其他返回结果,此处的列表也用来对表示函数返回的临时量进行初始化
 	//std::vector<int> process() {
@@ -1085,7 +1086,7 @@ typedef int int_T[10];
 //int_T* test_return_array(int (&x)[10]) 
 //尾置返回类型 c++11
 //int (* test_return_array(int (&x)[10]))[10] 
-auto test_return_array(int (&x)[10]) -> int(*)[10] //不知什么原因会提示无法找到函数定义(编译没问题),忽略之
+auto test_return_array(int(&x)[10]) -> int(*)[10] //不知什么原因会提示无法找到函数定义(编译没问题),忽略之
 {
 	//int x[10] = {};
 	//int(*y)[10] = &x;
@@ -1124,7 +1125,7 @@ const int & test_const_over(const int &x) {
 }
 //重载一个非const版本
 int & test_const_over(int &x) {
-	auto &r=test_const_over(const_cast<const int&>(x));
+	auto &r = test_const_over(const_cast<const int&>(x));
 	//注意不能返回一个局部变量(返回了一个别名,实际还是那块内存,相当于原变量,因此auto类型为int不是int&)
 	return const_cast<int &>(r);
 }
@@ -1166,7 +1167,7 @@ void test_default_param_1(int x = asdfs, int y = return_int(), int c, int d) {};
 
 //constexpr是指能用于常量表达式的函数=>规定返回类型及所有形参的类型都是字面值类型
 //而且函数体内只有一条return语句
-constexpr int new_sa() { return 45;  }
+constexpr int new_sa() { return 45; }
 constexpr int dssdfdsfds = new_sa();//正确 foo是一个常量表达式
 //允许constexpr函数的返回值并非一个常量
 //constexpr为了能编译过程中随时展开,被隐式地指定为内联函数
@@ -1208,6 +1209,130 @@ void test_debug() {
 
 }
 //函数匹配
+//确定候选函数(集合中的函数)和可行函数
+//候选函数有两个特性:与被调函数同名 声明在调用点可见
+//可行函数也有两个特性: 形参数量与本次调用提供的实参数量相等 每个实参类型与对应的形参类型相同或是能转换成形参类型
+//有默认值的可看成拥有多个形参数量
+//最后寻找最佳匹配,逐一检查实参 寻找形参类型与实参类型最匹配的那个可行函数,类型越接近匹配越好
+//f(int, int);
+//f(double, double);
+//f(3, 3.14);
+//以上调用没有一个最佳匹配 两个一样的程度,都需要一次内置类型转换,因此会报错
+
+//实参类型转换
+//小整数一般会转换成int
+//void ff(int);
+//void ff(short);
+//ff('a') //char提升到int 调用ff(int)
+
+//所有的算术类型转换的级别都一样,int=>unsigned int转换并不比从int向double的转换级别高
+//会引发二义性调用 
+
+//参数匹配和const实参
+
+//函数指针 指向函数而非对象
+//函数的类型由它的返回类型和形参类型共同决定,与函数名无关
+//bool lengthCompare(const string &, const string &);
+//bool(*pf)(const string &, const string &); //函数指针
+//*pf不能少括号
+//pf = lengthCompare; 
+//pf = &lengthCompare;  //等价的赋值语句: &可选
+//调用时无需提前解引用指针
+//b1 = pf("ddd","dddd");
+//b2 = (*pf)("dddd","ddd"); //一个等价的调用
+//b3 = lengthCompare("hello","godd"); //等价
+
+//函数指针不存在类型转换(必须精确赋值(匹配)),可以赋0 nullptr
+//重载函数的指针
+//函数指针形参
+//和数组类似,虽不能定义函数类型的形参,但可以是指向函数的指针
+//虽然形参看起来是函数类型,实际上却是当成指针使用
+//void use(bool pf(const string &,const string &); //会自动转换pf为指针
+//void use(bool (*pf)(const string &,const string &); //等价 显示转换
+//实参同上面的赋值一样可选&
+//常用typedef 简化
+//func func2是函数类型
+//typedef bool func(const string &,const string &);
+//typedef decltype(lengthCompare) func2; //等价的类型
+//funcp funcp2是函数指针类型
+//typedef bool (*funcp)(const string &,const string &);
+//typedef decltype(lengthCompare) *funcp2; //等价的类型
+//以上四种都可以是函数的形参
+//[注意 decltype返回函数的类型 而不会自动转换成函数指针]
+
+//返回指向函数的指针
+//和数组类似,不能返回一个函数,但是能返回指向函数类型的指针.[但是一定要把返回类型写成指针形式]
+//[编译器不会自动将函数返回类型当成对应的指针类型处理]
+//using F = int(int*, int); //F是函数类型 不是指针
+//using PF = int(*)(int*, int); //PF是指针类型
+//PF fl(int); //正确: PF是指向函数的指针
+//F fl(int); //错误: 不能返回一个函数
+//F* fl(int); //正确
+//也可直接声明
+//int(*fl(int))(int*,int);
+//auto fl(int) -> int (*)(int*, int); // c++11
+
+
+//类
+void test_class_1() {
+	//eps1 7
+	//eps2 8
+	//eps3 9
+	//eps4 10
+	//eps5 6
+	//eps6 8
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	using std::string;
+	using NBD = New_bangumi_data;
+	//EPS eps1;
+	//EPS eps2;
+	EPS eps1{ {"eps1","eps2","eps3"} ,{7,8,9} };
+	EPS eps2{ {"eps4","eps5","eps6"} ,{10,6,9} };
+	cout << eps1 << endl;
+	cout << eps2 << endl;
+	//for (int i = 0; i < 3; ++i) {
+	//	cin >> eps1;
+	//}
+	//cout << eps1 << endl;
+	//for (int i = 0; i < 3; ++i) {
+	//	cin >> eps2;
+	//}
+	//cout << eps2 << endl;
+
+	NBD data1{ "Angel Beats",123456,9.1,eps1 };
+	NBD data2{ "Angel Beats",123456,9.1,eps1 };
+	cout << data1.AvgScore() << endl;
+	cout << data2.AvgScore() << endl;
+
+	EPS eps3 = eps1 + eps2;
+	cout << eps3 << endl;
+
+	cout << eps1.Combine(eps2) << endl;
+	cout << eps1.Score() << endl;
+	cout << eps1.avg_score << endl;
+
+	data1.Combine(data2);
+	cout << data1.Name() << "  " << data1.Id() << endl;
+	cout << data1.eps << endl;
+	cout << data1.AvgScore() << endl;
+
+
+	NBD data3 = add(data1, data2);
+	print(cout, data3);
+	NBD data4,data5;
+	//因为返回类型是输入输出流 因此可以这样操作
+	read(cin, data4) >> data5.eps;
+		//这里data1.eps是常量引用 因为 重载的函数中operator+ 没有用const修饰 因此不能隐式转换为非常量;
+	print(cout, data4) << data5.eps << endl;
+
+	EPS new_eps;
+	cout << new_eps.avg_score << endl;//经测试,在类中定义的内置变量相当于在函数体内定义,默认初始化是未定义
+
+
+
+}
 
 int main() {
 	//输入输出
@@ -1254,7 +1379,8 @@ int main() {
 	//	std::cout << i << " ";
 	//}
 	//std::cout << std::endl;
-	test_debug();
+	//test_debug();
+	test_class_1();
 	system("pause");
 	return 0;
 }
