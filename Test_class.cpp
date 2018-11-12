@@ -1,16 +1,17 @@
-#include "Test_class.h"
-//ÀàÍâ²¿¶¨Òå³ÉÔ±º¯Êı
-//Çë×¢Òâ¶¨Òå±ØĞëºÍÉùÃ÷Æ¥Åä,Ò²°üÀ¨ĞÎ²ÎºóµÄconst¹Ø¼ü×Ö
-//Í¬Ãû¼ÓÉÏÀàµÄÓò New_bangumi_data::
+ï»¿#include "Test_class.h"
+//ç±»å¤–éƒ¨å®šä¹‰æˆå‘˜å‡½æ•°
+//è¯·æ³¨æ„å®šä¹‰å¿…é¡»å’Œå£°æ˜åŒ¹é…,ä¹ŸåŒ…æ‹¬å½¢å‚åçš„constå…³é”®å­—
+//åŒååŠ ä¸Šç±»çš„åŸŸ New_bangumi_data::
 New_bangumi_data & New_bangumi_data::Combine(const New_bangumi_data &other)
 {
 	eps.Combine(other.eps);
 	return *this;
+
 }
 
 EPS& EPS::Combine(const EPS& other)
 {
-	//Èç¹û×ÔÉíInsert ×ÔÉí error
+	//å¦‚æœè‡ªèº«Insert è‡ªèº« error
 	if (this != &other) {
 		this->eps_name.insert(this->eps_name.end(), other.eps_name.begin(), other.eps_name.end());
 		this->eps_score.insert(this->eps_score.end(), other.eps_score.begin(), other.eps_score.end());
@@ -30,8 +31,8 @@ double New_bangumi_data::AvgScore() const
 EPS EPS::operator+(const EPS & eps1)
 {
 	EPS new_eps;
-	//Ò²¿ÉÓÃÒÑ¾­Ğ´¹ıµÄcombineÀ´ÊµÏÖ
-	//vectorµÄinsertº¯Êı
+	//ä¹Ÿå¯ç”¨å·²ç»å†™è¿‡çš„combineæ¥å®ç°
+	//vectorçš„insertå‡½æ•°
 	new_eps.eps_name.insert(new_eps.eps_name.end(), this->eps_name.begin(), this->eps_name.end());
 	new_eps.eps_name.insert(new_eps.eps_name.end(), eps1.eps_name.begin(), eps1.eps_name.end());
 	new_eps.eps_score.insert(new_eps.eps_score.end(), this->eps_score.begin(), this->eps_score.end());
@@ -40,16 +41,16 @@ EPS EPS::operator+(const EPS & eps1)
 
 	return new_eps;
 }
-//ÀàÏà¹ØµÄ·Ç³ÉÔ±º¯Êı(¸¨Öúº¯Êı)
-//Èç¹ûº¯ÊıÔÚ¸ÅÄîÉÏÊôÓÚÀàµ«ÊÇ²»¶¨ÒåÔÚÀàÖĞ,ÔòËüÒ»°ãÓ¦ÓëÀàÉùÃ÷(·Ç¶¨Òå)ÔÚÍ¬Ò»¸öÍ·ÎÄ¼şÖĞ
-//¼´Ó¦¸ÃÔÚÀàµÄÍ¬Ò»¸öÍ·ÎÄ¼şÖĞ
+//ç±»ç›¸å…³çš„éæˆå‘˜å‡½æ•°(è¾…åŠ©å‡½æ•°)
+//å¦‚æœå‡½æ•°åœ¨æ¦‚å¿µä¸Šå±äºç±»ä½†æ˜¯ä¸å®šä¹‰åœ¨ç±»ä¸­,åˆ™å®ƒä¸€èˆ¬åº”ä¸ç±»å£°æ˜(éå®šä¹‰)åœ¨åŒä¸€ä¸ªå¤´æ–‡ä»¶ä¸­
+//å³åº”è¯¥åœ¨ç±»çš„åŒä¸€ä¸ªå¤´æ–‡ä»¶ä¸­
 New_bangumi_data add(const New_bangumi_data&data1, const New_bangumi_data& data2)
 {
 	New_bangumi_data new_data;
 	if (data1.Id() == data2.Id()) {
 		new_data.name = data1.Name() + data2.Name();
 		new_data.ip_id = data1.Id();
-		//ÕâÀïdata1.epsÊÇ³£Á¿ÒıÓÃ ÒòÎª ÖØÔØµÄº¯ÊıÖĞoperator+ Ã»ÓĞÓÃconstĞŞÊÎ Òò´Ë²»ÄÜÒşÊ½×ª»»Îª·Ç³£Á¿
+		//è¿™é‡Œdata1.epsæ˜¯å¸¸é‡å¼•ç”¨ å› ä¸º é‡è½½çš„å‡½æ•°ä¸­operator+ æ²¡æœ‰ç”¨constä¿®é¥° å› æ­¤ä¸èƒ½éšå¼è½¬æ¢ä¸ºéå¸¸é‡
 		new_data.eps = const_cast<EPS&>(data1.eps) + data2.eps;
 	}
 	else {
@@ -57,7 +58,7 @@ New_bangumi_data add(const New_bangumi_data&data1, const New_bangumi_data& data2
 	}
 	return new_data;
 }
-//ÒÔÏÂÁ½¸ö°²È«ĞÔ²»×ã Èç¹ûBangumi_dataÊÇÒ»¸öÀàµÄ»° Ó¦µ±ÏñÊäÈëÊä³öÁ÷ÄÇÑùÊ¹ÓÃfriend
+//ä»¥ä¸‹ä¸¤ä¸ªå®‰å…¨æ€§ä¸è¶³ å¦‚æœBangumi_dataæ˜¯ä¸€ä¸ªç±»çš„è¯ åº”å½“åƒè¾“å…¥è¾“å‡ºæµé‚£æ ·ä½¿ç”¨friend
 std::ostream & print(std::ostream & os, const New_bangumi_data &data)
 {
 	std::cout << data.Name() << "[ " << data.Id() << " ]" << std::endl;

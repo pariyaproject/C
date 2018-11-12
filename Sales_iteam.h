@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef SALESITEM_H
 #define SALESITEM_H
 #include <iostream>

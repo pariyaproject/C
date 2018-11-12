@@ -1,39 +1,39 @@
-#ifndef BANGUMI_SUBJECT_H
+ï»¿#ifndef BANGUMI_SUBJECT_H
 #define BANGUMI_SUBJECT_H
-//pragma onceµÈ¼ÛÓÚifndef ... endif,µ«ifndefÊÇc++±ê×¼£¬Ö§³Ö¸ü¶àµÄ±àÒëÆ÷
-//µ«ÊÇÓĞÃüÃû³åÍ»µÄÎ£ÏÕ²¢ÇÒ±àÒëÏà¶Ô½ÏÂı
+//pragma onceç­‰ä»·äºifndef ... endif,ä½†ifndefæ˜¯c++æ ‡å‡†ï¼Œæ”¯æŒæ›´å¤šçš„ç¼–è¯‘å™¨
+//ä½†æ˜¯æœ‰å‘½åå†²çªçš„å±é™©å¹¶ä¸”ç¼–è¯‘ç›¸å¯¹è¾ƒæ…¢
 //#pragma once
-//¹ØÓÚiostreamÒÑ¾­ÄÚÖÃÁËÌõ¼ş±àÒëºêÓÃÀ´·ÀÖ¹ÖØ¸´¶¨Òå
+//å…³äºiostreamå·²ç»å†…ç½®äº†æ¡ä»¶ç¼–è¯‘å®ç”¨æ¥é˜²æ­¢é‡å¤å®šä¹‰
 #include <iostream>
-//bangumiÌõÄ¿Àà
+//bangumiæ¡ç›®ç±»
 extern const int x ;
 class Bangumi_subject
 {
 public:
-	//const ÀàĞÍÏŞ¶¨·û£º
-	//1.²»ÄÜĞŞ¸ÄÊı¾İ³ÉÔ± 2.²»ÄÜµ÷ÓÃ·Çconst³ÉÔ±º¯Êı 3.mutableĞŞÊÎµÄ³ÉÔ±ÊÇ¿ÉÒÔĞŞ¸ÄµÄ
-	//·ñÔò±àÒëÆ÷±¨´í
-	//mutable²»¿ÉĞŞÊÎº¯Êı
+	//const ç±»å‹é™å®šç¬¦ï¼š
+	//1.ä¸èƒ½ä¿®æ”¹æ•°æ®æˆå‘˜ 2.ä¸èƒ½è°ƒç”¨éconstæˆå‘˜å‡½æ•° 3.mutableä¿®é¥°çš„æˆå‘˜æ˜¯å¯ä»¥ä¿®æ”¹çš„
+	//å¦åˆ™ç¼–è¯‘å™¨æŠ¥é”™
+	//mutableä¸å¯ä¿®é¥°å‡½æ•°
 	int Id()const;
 	int DoNum()const;
 	int Score()const;
 	Bangumi_subject();
 	Bangumi_subject(int,int,int);
-	//×¢ÒâĞèÒªÉùÃ÷ÎªÓÑÔªº¯Êı
-	//<<>>²Ù×÷·ûÁ½¸öº¯ÊıÇ©Ãû²»Ò»Ñù
-	//ÓÑÔªº¯Êı¿ÉÒÔ·ÃÎÊÀàÖĞµÄËùÓĞÊı¾İ³ÉÔ±
-	//×¢Òâ£ºinlineÒ»¶¨ÒªÔÚ±¾ÎÄ¼şÖĞÊ¹ÓÃ²»ÄÜh cppÖĞÊ¹ÓÃ
-	//µ±ÓÃµ½>>Ä£°åÖØÔØÊ±ÉùÃ÷ºÍÊµÏÖ¶¼Ê¹ÓÃÒ»¸ö²»Í¬µÄÄ£°å
+	//æ³¨æ„éœ€è¦å£°æ˜ä¸ºå‹å…ƒå‡½æ•°
+	//<<>>æ“ä½œç¬¦ä¸¤ä¸ªå‡½æ•°ç­¾åä¸ä¸€æ ·
+	//å‹å…ƒå‡½æ•°å¯ä»¥è®¿é—®ç±»ä¸­çš„æ‰€æœ‰æ•°æ®æˆå‘˜
+	//æ³¨æ„ï¼šinlineä¸€å®šè¦åœ¨æœ¬æ–‡ä»¶ä¸­ä½¿ç”¨ä¸èƒ½h cppä¸­ä½¿ç”¨
+	//å½“ç”¨åˆ°>>æ¨¡æ¿é‡è½½æ—¶å£°æ˜å’Œå®ç°éƒ½ä½¿ç”¨ä¸€ä¸ªä¸åŒçš„æ¨¡æ¿
 	friend std::ostream& operator <<(std::ostream& ,const Bangumi_subject &);
 	friend std::istream& operator >>(std::istream&,Bangumi_subject &);
-	//Ç°ÖÃ++Ã»ÓĞ²ÎÊıÇø·Ö£¬´Ë´¦ÄÜ·¢ÏÖÇ°ÖÃ++·µ»ØÊÇÒ»¸öÒıÓÃ£¬Ğ§ÂÊ¸ü¸ß
+	//å‰ç½®++æ²¡æœ‰å‚æ•°åŒºåˆ†ï¼Œæ­¤å¤„èƒ½å‘ç°å‰ç½®++è¿”å›æ˜¯ä¸€ä¸ªå¼•ç”¨ï¼Œæ•ˆç‡æ›´é«˜
 	Bangumi_subject& operator ++();
-	//ºóÖÃ++ĞèÒªÓÃÒ»¸ö²ÎÊıÇø±ğ
+	//åç½®++éœ€è¦ç”¨ä¸€ä¸ªå‚æ•°åŒºåˆ«
 	Bangumi_subject operator++(int);
 	//tip:
-	//ĞÎ²ÎÖĞµÄ Bangumi_subject* ºÍ Bangumi_subject& µÄÇø±ğ
-	//*ÖĞµ÷ÓÃÎª func(&subject)Êµ¼Ê´«ÁËÒ»¸ö´æÓĞµØÖ·µÄ±äÁ¿£¬ÏûºÄÁËµØÖ·µÄ¿Õ¼ä(ÉêÇë£¬ÈİÁ¿)
-	//&ÖĞµ÷ÓÃÎª func(subject)Ö±½ÓÊ¹ÓÃ±ğÃû£¬·Ç±äÁ¿
+	//å½¢å‚ä¸­çš„ Bangumi_subject* å’Œ Bangumi_subject& çš„åŒºåˆ«
+	//*ä¸­è°ƒç”¨ä¸º func(&subject)å®é™…ä¼ äº†ä¸€ä¸ªå­˜æœ‰åœ°å€çš„å˜é‡ï¼Œæ¶ˆè€—äº†åœ°å€çš„ç©ºé—´(ç”³è¯·ï¼Œå®¹é‡)
+	//&ä¸­è°ƒç”¨ä¸º func(subject)ç›´æ¥ä½¿ç”¨åˆ«åï¼Œéå˜é‡
 	Bangumi_subject operator+(const Bangumi_subject&);
 	Bangumi_subject &operator+=(const Bangumi_subject&);
 private:

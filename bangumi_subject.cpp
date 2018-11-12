@@ -1,4 +1,4 @@
-#include "bangumi_subject.h"
+ï»¿#include "bangumi_subject.h"
 #include <iostream>
 using std::istream;
 using std::ostream;
@@ -64,7 +64,7 @@ Bangumi_subject Bangumi_subject::operator+(const Bangumi_subject &subject)
 Bangumi_subject & Bangumi_subject::operator+=(const Bangumi_subject &subject)
 {
 	this->do_num += subject.do_num;
-	// TODO: ÔÚ´Ë´¦²åÈë return Óï¾ä
+	// TODO: åœ¨æ­¤å¤„æ’å…¥ return è¯­å¥
 	return *this;
 }
 
