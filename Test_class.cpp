@@ -70,3 +70,13 @@ std::istream & read(std::istream& is, New_bangumi_data& data)
 	std::cin >>data.name>> data.ip_id;
 	return is;
 }
+
+std::string TestStatic::Msg(){
+	return msg;
+}
+
+std::string TestStatic::name = "123";
+bool TestStatic::bReady = false;
+std::string TestStatic::msg = "222";
+int TestStatic::id = 999;
+static const int period  = 40;

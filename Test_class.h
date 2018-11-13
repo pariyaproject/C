@@ -1,4 +1,4 @@
-﻿#pragma once
+﻿
 #ifndef TEST_CLASS_H
 #define TEST_CLASS_H
 #include<iostream>
@@ -209,8 +209,9 @@ inline std::istream & operator >> (std::istream &is, EPS &eps)
 	//	当一个流遇到数据类型不一致的错误而不可用时，我们可以使其恢复为有效状态（置换eof和fail位）
 
 	//	cin.clear(cin.rdstate() & ~cin.failbit & ~cin.badbit);   //cin.rdstate()表示流当前的状
+	//is.setstate(std::istream::badbit);
 	while (!has_enter) {
-
+		//
 		if (is >> nname >> nscore) {
 
 			has_enter = true;
@@ -224,6 +225,9 @@ inline std::istream & operator >> (std::istream &is, EPS &eps)
 		}
 		else {
 			std::cout << "Bad Input" << std::endl;
+			//此处如下清除cin的状态,以正确接受下次的输入,否则当前cin返回bool false导致一直输出Bad Input
+			//std::cin.clear(std::cin.rdstate() & ~std::cin.failbit & ~std::cin.badbit);
+			is.clear();
 		}
 	}
 
@@ -427,18 +431,64 @@ static TestAggregateClass test_a = { 0,"Ana" };
 //constexpr构造函数必须既符合构造函数要求:不能包含返回语句,又符合constexpr函数要求:唯一可执行语句就是返回语句
 //综上一般函数体为空,但可以通过初始化列表
 //constexpr构造函数必须初始化所有数据成员
-//c++ 14有部分更改
+//c++ 14有部分更改 提示 constexpr将不表示常量考虑显式指定常量
 class TestDebug {
 public:
-	constexpr TestDebug(int code, bool bo) :error_code(code), error_bool(bo) {};
-	constexpr TestDebug(bool bo) :error_bool(bo),error_code(404) {};
-	constexpr int Code() { return error_code; }
-	constexpr bool BError() { return error_bool; }
+	//constexpr TestDebug(int code, bool bo) :error_code(code), error_bool(bo) {};
+	//constexpr TestDebug(bool bo) :error_bool(bo),error_code(404) {};
+	//constexpr int Code() { return error_code; }
+	//constexpr bool BError() { return error_bool; }
+	const TestDebug(int code, bool bo) :error_code(code), error_bool(bo) {};
+	const TestDebug(bool bo) :error_bool(bo),error_code(404) {};
+	const int Code() { return error_code; }
+	const bool BError() { return error_bool; }
 private:
 	int error_code;
 	bool error_bool;
-
+	//const bool a = true;
 };
 //注意不应当在头文件中定一个作用域,除非静态
 //否则会链接重定义
+
+//类的静态成员
+//通过在成员的声明之前加上关键字static使得其与类关联在一起
+//静态成员可以是public private 类型可以是常量,引用 指针 类类型
+//类的静态成员存在于任何对象之外,对象中不包括任何与静态数据成员有关的数据
+//静态成员函数也不与任何对象绑定在一直,它们不包含this指针,因此不能声明成const 而且不能使用在内this
+
+//使用类名的作用域直接访问静态成员:当然具体的对象也能像之前那样访问
+//定义静态成员:既可在类的内部,也可在类的外部定义静态成员函数,当在类的外部定义静态成员时
+//不能重复static关键字,该关键字只出现在类的内部声明语句
+//静态成员不是构造函数初始化的,而且一般不能在类内初始化静态成员,相反,必须在类的外部定义和初始化每个
+//静态成员,一个静态成员只能定义一次
+//类似于全局变量,静态数据成员定义在任何函数之外,因此一旦被定义就将一直存在于程序的整个生命周期
+//定义静态数据成员的方式和在类的外部定义成员函数差不多,需要指定类型名,然后是类名,使用域运算符以及成员自己的名字
+class TestStatic {
+public:
+	static int id;
+	static std::string name;
+	static bool Ready() { return bReady; }
+	static std::string Msg();
+	static const int &Period() { return period; }
+private:
+	static bool bReady;
+	static std::string msg;
+	//注意必须+const 否则不能类内初始值
+	static const int period = 30; 
+	//如果仅仅用在定义数组大小,则可不定义,但是如果其他地方又使用了它的引用则必须定义,因为已有类内初始值,定义语句不加初始值
+	//然而尝试后没有出错...
+	double dail_tbl[period];
+};
+//定义并初始化一个静态成员包括函数
+//最好不要在头文件中定义静态的成员或者静态的函数,但可以定义非静态的函数 否则可能会报重定义
+//必须初始化,不会进行默认的初始化,否则未识别
+//int TestStatic::id = 1;
+//std::string TestStatic::name = "ddd";
+//要想确保对象只定义一次,最好的办法是把静态数据成员的定义与其他非内联函数的定义放在同一个文件中
+
+//静态成员也可类内初始化
+//要求静态成员必须是字面常量类型的constexpr 初始值必须是常量表达式
+
+//静态成员能用于某些场景(即静态数据成员可以是不完全类型,而非静态成员就只能声明成它所属类的指针或引用)
+//另外一个区别:可以使用静态成员作为默认实参 (自增的ID对象有用)
 #endif

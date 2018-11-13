@@ -1304,8 +1304,8 @@ void test_class_1() {
 	//初始化列表{}仅仅可以对public成员有效(并且无须相应的构造函数定义)
 	//NBD data1{ "Angel Beats",123456,9.1,eps1 };
 	//NBD data2{ "Angel Beats",123456,9.1,eps1 };
-	NBD data1( "Angel Beats",123456,9.1,eps1 );
-	NBD data2( "Angel Beats",123456,9.1,eps1 );
+	NBD data1("Angel Beats", 123456, 9.1, eps1);
+	NBD data2("Angel Beats", 123456, 9.1, eps1);
 	cout << data1.AvgScore() << endl;
 	cout << data2.AvgScore() << endl;
 
@@ -1324,10 +1324,10 @@ void test_class_1() {
 
 	NBD data3 = add(data1, data2);
 	print(cout, data3);
-	NBD data4,data5;
+	NBD data4, data5;
 	//因为返回类型是输入输出流 因此可以这样操作
 	read(cin, data4) >> data5.RefEps();
-		//这里data1.eps是常量引用 因为 重载的函数中operator+ 没有用const修饰 因此不能隐式转换为非常量;
+	//这里data1.eps是常量引用 因为 重载的函数中operator+ 没有用const修饰 因此不能隐式转换为非常量;
 	print(cout, data4) << data5.RefEps() << endl;
 
 	EPS new_eps;
@@ -1357,6 +1357,107 @@ void test_TestDebug() {
 	TestDebug b(false);
 
 }
+void test_StaticClass() {
+	const int &pe = TestStatic::Period();
+
+	std::cout << TestStatic::id << "  "
+		<< TestStatic::name << "  "
+		<< TestStatic::Ready() << "  "
+		<< TestStatic::Msg()
+		<< TestStatic::Period() //输出30 类内定义的初始值30 类外定义初始值为40
+		<< std::endl;
+
+}
+//c++标准库
+//IO类
+//c++不支持直接处理输入输出,而是通过一族定义在标准库中的类型来处理IO
+//这些类型支持从设备读取,向设备写入数据的IO操作,设备可以是文件,控制台窗口等还有一些类型允许内存IO
+//iostream定义了用于读写流的基本类型 宽字符 wistream wostream wiostream
+//fstrem定义了读写命名文件的类型 wifstream wofstream wfstream
+//sstream定义了读写内存string对象的类型 wistringstream(读取) wostringstream(写入) wstringstream
+//宽字符版本的类型和函数的名字以一个w开始 wcin wcout
+//两个版本定义在同一个头文件中 例如:头文件fstream定义了ifstream和wifstream类型
+//类型ifstream和istringstream都继承自istream
+
+//IO对象无拷贝或赋值,因此不能将形参或返回类型设置为流类型,通常以引用的方式传递和返回.读写一个对象会改变其状态,因此传递和返回的引用不能是const
+//IO条件状态 strm::iostate[是一种机器无关的类型,提供了表达条件状态的完整功能] 其中strm是一种IO类型 例如 istream::iostate ifstream::iostate
+//strm::badbit 用来指出流已崩溃 strm::failbit 指出IO操作失败 strm::eofbit 指出流到达了文件结束
+//strm::goodbit 指出流未处于错误状态,此值保证为0
+//s.eof() 若流s的eofbit置位,则返回true  s.fail() fail或者badbit置位返回true
+//s.bad() 若流s的badbit置位,则返回true  s.good() s处于有效状态true
+//s.clear() 将流中所有条件状态复位,状态设置为有效 返回void
+//s.clear(flags)根据给定的flags标志位,将s中对应条件状态复位 flags类型为strm::iostate 返回void
+//s.setstate(flags)将对应条件状态置位
+//s.rdstate() 返回当前条件状态,类型为strm::iostate
+//使用IO时 一定注意状态的复位等情况 确定一个流对象的简单方法是将它当作一个条件使用
+
+//查询流状态
+//strm::iostate作为一个位集来使用IO库定义了4个iostate类型的constexpr值表示特定的位模式
+//badbit表示系统级错误,如不可恢复的读写错误,一旦badbit被置位,流就无法再使用了
+//在发生可恢复错误后,failbit被置位,如期望读取类型不符,这种问题通常是可以修复的
+//如果到达文件结束位置,eofbit和failbit都会被置位,goodbit的值为0表示未发生错误
+//如果badbit,failbit,eofbit任一个被置位,则检测流状态的条件会失败
+//使用good() fail()是确定流总体状态的正确方法,实际上将流作为条件使用的代码等价于 !fail()
+//good()所有错误位均未置位返回true
+
+//经尝试 badbit被置位,clear是可以还原的
+//只复位failbit和badbit
+//cin.clear(cin.rdstate()&~cin.failbit&~cin.badbit);
+
+//每个输出流都管理一个缓冲区,用来保存程序读写的数据
+//有了缓冲的机制,操作系统就可以将程序的多个输出操作组合成单一的系统级写操作,可以提升性能,写操作开销大
+//导致缓冲区刷新(数据真正写到输出设备或文件)
+//1.程序正常结束 main的 return
+//2.缓冲区满了
+//3.使用操纵符endl显式刷新
+//4.在每个输出操作之后,可以用操纵符unitbuf设置流的内部状态,来清空缓冲区,默认情况下对cerr是设置unitbuf的,因此cerr的内容立即刷新
+//5.一个输出流可能被关联到另一个流,在这种情况下,当读写被关联的流时,关联到流的缓冲区会被刷新,例如cin cerr关联到cout,因此读cin或写cerr会导致cout的缓冲区被刷新
+//除了endl IO库中还有类似的操纵符 flush和ends flush刷新缓冲区,但不输出任何额外的字符,ends向缓冲区插入一个空字符,然后刷新缓冲区
+void test_IO_buf() {
+	using std::cout;
+	using std::ends;
+	using std::endl;
+	using std::flush;
+
+	cout << "xxx" << endl;
+	cout << "xxx" << ends;
+	cout << "xxx" << flush;
+	
+	cout << std::unitbuf; //之后输出操作后会立即刷新buf
+	//注意 这是一个三次流输出,而非一次
+	cout << "ddddssdsds" << "dddsdsd" << "vdvvfdvdvdv";
+	cout << std::nounitbuf; //回到正常的缓冲方式
+
+	//tie 验证失败,依旧会关联
+	cout << "\n\nTest: tie()" << endl;
+	std::cin.tie(nullptr);
+	cout << "next: you input a num\n";
+	int x;
+	std::cin >> x;
+	cout << "you have inputed\n" ;
+	std::cin >> x;
+	cout << "you have inputed again\n";
+	cout << "cin.tie():" << (std::cin.tie() ? "yes" : "no") << endl;
+	std::cin.tie(&std::cout);
+}
+//unitbuf操纵符如果想在每次输出操作后都刷新缓冲区,可以使用unitbuf操纵符,它告诉流在接下来的每次写操作之后都进行一次flush操作
+//而nounitbuf操纵符则重置流,使其恢复使用正常的繁育管理的缓冲区刷新机制
+//当程序异常终止,输出缓冲区是不会被刷新的,可能仪在输出缓冲区中等待打印
+
+//关联输入和输出流标准库将cin cout关联在一起
+//例如 cin>>x; 会导致cout的缓冲区被刷新
+//交互式繁育通常应该关联输入流和输出流
+//tie有两个重载版本:一个不带参数,返回指向流的指针.如果本对象当前关联到一个输出流,则返回的就是指向这个流的指针
+//如果对象未关联到流,则返回空指针
+//版本2接受一个指向ostream的指针,将自己关联到此ostream,即 x.tie(&o)将流x关联到输出流o
+//每个流最多关联到一个流,但多个流可以同时关联到同一个ostream
+
+//文件的输入输出
+//头文件fstream定义了三个类型来支持文件IO:
+//ifstream从一个给定的文件读取数据,ofstream向一个给定文件写入数据
+//fstream读写给定文件
+//这些类型提供的操作与之前使用过的对象cin cout的操作一样 >> << getline
+//除了继承的行为,还增加了新的成员来管理与流关联的文件
 
 
 int main() {
@@ -1406,7 +1507,9 @@ int main() {
 	//std::cout << std::endl;
 	//test_debug();
 	//test_class_1();
-	test_TestDebug();
+	//test_TestDebug();
+	//test_StaticClass();
+	test_IO_buf();
 	system("pause");
 	return 0;
 }
