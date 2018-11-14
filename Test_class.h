@@ -168,12 +168,12 @@ inline std::ostream & operator<<(std::ostream &os, const EPS &eps)
 	assert(eps.eps_name.size() == eps.eps_score.size());
 	auto num = eps.eps_name.size();
 	if (num == 0) {
-		std::cout << "No eps" ;
+		os << "No eps" ;
 	}
 	else {
 		if(num >1)
 		for (decltype(num) i = 0; i < num-1; ++i) {
-			std::cout << "EPS: "
+			os << "EPS: "
 				<< eps.eps_name[i]
 				<< "  SCORE: "
 				<< eps.eps_score[i]
@@ -181,7 +181,7 @@ inline std::ostream & operator<<(std::ostream &os, const EPS &eps)
 		}
 		//最后一个不输出换行
 		if (true) {
-			std::cout << "EPS: "
+			os << "EPS: "
 				<< eps.eps_name[num-1]
 				<< "  SCORE: "
 				<< eps.eps_score[num-1];

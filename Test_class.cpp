@@ -61,13 +61,13 @@ New_bangumi_data add(const New_bangumi_data&data1, const New_bangumi_data& data2
 //以下两个安全性不足 如果Bangumi_data是一个类的话 应当像输入输出流那样使用friend
 std::ostream & print(std::ostream & os, const New_bangumi_data &data)
 {
-	std::cout << data.Name() << "[ " << data.Id() << " ]" << std::endl;
+	os << data.Name() << "[ " << data.Id() << " ]" << std::endl;
 	return os;
 }
 
 std::istream & read(std::istream& is, New_bangumi_data& data)
 {
-	std::cin >>data.name>> data.ip_id;
+	is >>data.name>> data.ip_id;
 	return is;
 }
 

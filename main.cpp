@@ -2,6 +2,12 @@
 #include <string>
 #include <cctype>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <list>
+#include <deque>
+#include <array>
+#include <forward_list>
 //包含来自标准库的头文件时使用<>否则""
 //class
 #include "bangumi_subject.h"
@@ -1326,9 +1332,24 @@ void test_class_1() {
 	print(cout, data3);
 	NBD data4, data5;
 	//因为返回类型是输入输出流 因此可以这样操作
+
+	//使用IO类
 	read(cin, data4) >> data5.RefEps();
-	//这里data1.eps是常量引用 因为 重载的函数中operator+ 没有用const修饰 因此不能隐式转换为非常量;
 	print(cout, data4) << data5.RefEps() << endl;
+
+	//使用文件流
+	string in_file_name("study.txt");
+	string out_file_name("ostudy.txt");
+	std::ifstream fin(in_file_name);
+	std::ofstream fout(out_file_name);
+	//在vs中当前路径是在代码所在的目录
+	if (fin)
+		read(fin, data4) >> data5.RefEps();
+	//这里data1.eps是常量引用 因为 重载的函数中operator+ 没有用const修饰 因此不能隐式转换为非常量;
+	if (fout)
+		print(fout, data4) << data5.RefEps() << endl;
+
+	//使用string流
 
 	EPS new_eps;
 	cout << new_eps.Score() << endl;//经测试,在类中定义的内置变量相当于在函数体内定义,默认初始化是未定义
@@ -1413,6 +1434,7 @@ void test_StaticClass() {
 //4.在每个输出操作之后,可以用操纵符unitbuf设置流的内部状态,来清空缓冲区,默认情况下对cerr是设置unitbuf的,因此cerr的内容立即刷新
 //5.一个输出流可能被关联到另一个流,在这种情况下,当读写被关联的流时,关联到流的缓冲区会被刷新,例如cin cerr关联到cout,因此读cin或写cerr会导致cout的缓冲区被刷新
 //除了endl IO库中还有类似的操纵符 flush和ends flush刷新缓冲区,但不输出任何额外的字符,ends向缓冲区插入一个空字符,然后刷新缓冲区
+
 void test_IO_buf() {
 	using std::cout;
 	using std::ends;
@@ -1422,7 +1444,7 @@ void test_IO_buf() {
 	cout << "xxx" << endl;
 	cout << "xxx" << ends;
 	cout << "xxx" << flush;
-	
+
 	cout << std::unitbuf; //之后输出操作后会立即刷新buf
 	//注意 这是一个三次流输出,而非一次
 	cout << "ddddssdsds" << "dddsdsd" << "vdvvfdvdvdv";
@@ -1434,7 +1456,7 @@ void test_IO_buf() {
 	cout << "next: you input a num\n";
 	int x;
 	std::cin >> x;
-	cout << "you have inputed\n" ;
+	cout << "you have inputed\n";
 	std::cin >> x;
 	cout << "you have inputed again\n";
 	cout << "cin.tie():" << (std::cin.tie() ? "yes" : "no") << endl;
@@ -1458,6 +1480,318 @@ void test_IO_buf() {
 //fstream读写给定文件
 //这些类型提供的操作与之前使用过的对象cin cout的操作一样 >> << getline
 //除了继承的行为,还增加了新的成员来管理与流关联的文件
+//fstream fstrm; 创建一个未绑定的文件流, fstream是头文件中定义的一个类型
+//fstream fstrm(s); s是string or 字符串字面值,这些构造函数都是explicit的,默认的模式依赖于fstream的类型
+//fstream fstrm(s,mode); 指定mode打开文件
+//fstrm.open(s); 打开名为s的文件,并将文件与fstrm绑定,s可以是一个string或一个指向c风格字符串的指针,默认的mode依赖于fstrm的类型
+//fstrm.close(); 关闭与fstm绑定的文件,返回void
+//fstrm.is_open(); 返回一个bool 指出与fstrm关联的文件是否成功打开并且尚未关闭
+
+//当定义一个文件流对象时,如果指定有参数,会自动调用open(s)绑定一个文件名
+//否则未与任何文件绑定
+
+//用fstream代替iostream& 因为fstream是继承自iostream的因此可以用fstream的实参代替iostream&的形参
+//这里运用到了多态的知识
+//如果定义了一个空的文件流对象,随后可以用open来将它与文件关联
+//如果调用open失败,failbit会被置位,因此需要检查open
+//一旦一个文件流已经打开,它就保持与对应文件的关联
+//对一个已经打开的文件流调用open会失败,并会导致failbit被置位
+//随后试图使用文件流的操作都会失败
+//为了将文件流关联到另外一个文件,必须首先关闭已经关联的文件,一旦文件成功关闭,才能打开新的文件
+//如果open成功,则会设置流的状态,使得good()返回true;
+
+//当一个fstream对象被销毁时,close函数会自动被调用
+//注意一个循环体内创建的变量每次本次循环结束后便会被销毁
+//因此可以在一个循环体内ifstream input (file_name); 而不使用close
+//这样每次循环都会新创建一个ifstream
+
+//文件模式 file mode用来指出如何使用文件
+//in 以读的方式打开
+//out 以写的方式打开
+//app 每次写操作前均定位到文件末尾
+//ate 打开文件后立即定位到文件末尾
+//trunc 截断文件
+//binary 以二进制的方式进行IO
+//无论用哪种方式打开文件,我们都可以指定文件模式,调用open打开文件时可以
+//用一个文件名初始化流来隐式打开文件时也可以,指定文件模式有如下限制
+//只可对ofstream fstream 对象设定out 模式
+//只可对ifstream fstream 对象设定in 模式
+//只有当out也被设定时才可设定trunc模式
+//只要trunc没被设定,就可以设定app模式,在app模式下即便没有显式指定out,文件也总是以输出方式打开
+//默认情况下,即使没有指定trunc,以out模式打开的文件也会被截断,因此要不使用app模式,要不同时指定in模式
+//ate和binary模式可用于任何类型的文件流对象 且可以与其他任何文件模式组合使用
+
+//每个文件流类型都定义了一个默认的文件模式,未指定文件模式时,就会使用此默认模式
+//ifstream => in   ofstream => out  fstream => in + out
+
+//以out模式打开文件会丢弃已有数据
+//阻止的方法是同时使用app模式 或同时使用in模式
+//ofstream app("file", ofstream::out|ofstream::app);
+//每次调用open都会确定文件模式
+
+//string流
+//sstream头文件定义了三个类型来支持内存IO,这些类型可以向string写入数据,从sstring读取数据
+//就像string是一个IO流一样
+//istringstream从string读取数据
+//ostringstream向string写入数据
+//stringstream 可读可写
+//额外的函数
+//sstream strm;  未绑定的stringstream对象 sstream是头文件中的定义的一个类型
+//sstream strm(s);  strm是一个sstream对象,保存string s的一个拷贝,此构造函数是explicit的
+//strm.str(); 返回strm所保存的string的拷贝
+//strm.str(s); 将string s拷贝到strm中,返回void
+
+//使用istringstream 一些工作是对整行文本进行处理,而其他一些工作是处理行内的单个单词时,通常使用istringstream
+//
+using EBD = struct Easy_Bangumi_Data {
+	unsigned id;
+	std::vector<std::string> msg;
+};
+void test_sstream() {
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	using std::string;
+	//只有\r不行 window中\r\n (\r是回车回到行首 \n是换一行)
+	string input = "123 Angelbeats\r\n"
+		"1111 Yoooo! Data:11-05\r\n"
+		"5555 C Score:9\r\n"
+		"1\r\n"
+		"13021 D! Score:10";
+	std::istringstream cinput(input);
+	EBD temp_subject;
+	string line, line_msg;
+	std::vector<EBD> Bangumi;
+	//也可在此定义,但是注意这个一个继承自iostream的string流
+	//因此读取完一行后状态会改变(因为是公共的,所以一次循环后注意清状态)
+	std::istringstream subject_ori;
+	while (getline(cinput, line)) {
+		//可以在此定义
+		//std::istringstream subject_ori;
+		subject_ori.str(line);
+#ifndef NDEBUG
+		cout << "###### "
+			<< subject_ori.str()
+			<< endl;
+#endif
+		subject_ori >> temp_subject.id;
+		while (subject_ori >> line_msg) {
+			temp_subject.msg.push_back(line_msg);
+		}
+		//push
+		Bangumi.push_back(temp_subject);
+		//清理vector
+		temp_subject.msg.clear();
+		//清理状态
+		subject_ori.clear(subject_ori.goodbit);
+	}
+
+	//print
+	for (auto s : Bangumi) {
+		cout << s.id << endl;
+		for (auto m : s.msg) {
+			cout << m << " | ";
+		}
+		cout << endl;
+	}
+
+	//使用ostringstream 逐步构造最后一起打印
+	//少于两项说明的不打印,输出特定字符,ID 和 说明分开打印
+	cout << "\n========" << endl;
+	std::string output_msg;
+	std::ostringstream print(output_msg);
+	for (auto s : Bangumi) {
+		cout << "="
+			<< s.id
+			<< "="
+			<< endl;
+		if (s.msg.size() > 1) {
+			print << "[" << s.id << "]\n";
+			for (auto m : s.msg) {
+				print << m << endl;
+			}
+		}
+		else
+			print << "[" << s.id << "]" << " 信息不足" << endl;
+	}
+	cout << "========\nInfo:\n=======\n";
+	//最后输出信息
+
+	cout << print.str() << endl;
+}
+//每个IO对象都维护一组条件状态,用来指出此对象上是否可以进行IO操作
+//如果在输入流上遇到了文件末尾,则对象的状态变为失效
+//getline也会改变流的状态,即一次就会让其变为失效
+
+//顺序容器
+//所有的容器类都共享公共的接口
+//一个容器就是一些特定对象的集合
+//所有的顺序容器都提供了快速访问元素的能力,但是在一些方面有不同的性能折中(添加删除容器的代价)(非顺序访问窗口中元素的代价)
+//vector 可变大小的数组,支持快速随机访问,在尾部之外的位置插入或删除元素可能很慢
+//deque 双端队列,支持快速随机访问,在头尾插入/删除速度很快
+//list 双向链表,只支持双向顺序访问,在list中任意位置进行插入/删除操作速度很快
+//forward_list 单向链表,只支持单向顺序访问,任意位置进行插入/删除操作速度很快
+//array 固定大小数组,支持快速随机访问,不能添加或删除元素
+//string 与vector相似的容器,但专门用于保存字符,随机访问快,在尾部插入/删除速度快
+
+//string和vector将元素保存在连续的内存空间中,在中间添加或删除后,需要移动插入,删除位置之后的所有元素
+//然而添加一个元素有时可能还需要分配额外的存储空间,这种情况下,每个元素都必须移动到新的存储空间中
+
+//list forward_list为了访问一个元素,只能遍历整个容器,而且与vector deque array相比,这两个容器额外内在开销很大
+//deque是一个复杂的数据结构,其在双端添加删除元素很快,与list或forward_list添加删除元素的速度相当
+
+//forward_list和array是c++标准新增加的类型,与内置数组相比,array是一种更安全,更容易使用的数组类型
+//forward_list的设计目的是达到与最好的手写的单向链表数据结构相当的性能
+//因此forward_list没有size操作,因为保存计算大小会比手写链表多出额外的开销,对其他容器而言,size保证是一个快速的常量时间的操作
+
+//通常使用vector是最好的选择
+//vector如果需要在容器中间插入元素 可以先插后面再排序达到目的:标准库的sort函数
+//也可考虑在输入阶段使用list,一旦输入完成,将list中的内容拷贝到一个vector中
+
+//如果不确定应该使用哪种容器,可以在程序中只使用vector和list的公共的操作:使用迭代器,不使用下标
+//这样更改方便
+//接下来的操作对所有的容器(顺序,无序,关联,个别容器)都适用
+//每个容器都定义在一个头文件中,文件名与类型名相同,deque定义在头文件deque中
+//list定义在 list中, 容器均定义为模板类
+//例如对vector,需要提供额外信息来生成特定的容器类型,对大多数,但不是所有容器,还需要提供元素类型的信息
+//list<Bangumi_data> //保存类对象的list
+//deque<double> //保存double的deque
+//顺序容器几乎可以保存任意类型的元素,比如容器的容器
+//vector<vector<int>> lines ;//注意较旧的编译器需要 <vector<int> > 加空格
+//假定noDefault是一个没有默认构造函数的类型
+//vector<noDefault> v1(10, init); //正确 提供了元素初始化器
+//vector<noDefault> v1(10); //错误 必须提供一个元素初始化器
+//容器的操作
+//类型别名
+//iterator const_iterator (迭代器类型)
+//size_type(无符号整数类型) difference_type (有符号整数类型)
+//value_type (元素的类型) reference (元素的左值类型与value_type&同义) 
+//const_reference (const左值类型 const value_type&)
+
+//构造函数 
+//C c; 默认构造 空容器
+//C c1(c2); 构造c2的拷贝c1
+//C c(b,e); 构造c 将迭代器b和e指定的范围内的元素拷贝到c (array不支持)
+//C c{a,b,c,...}; 列表初始化
+
+//赋值与swap
+//c1 = c2;  将c1中的元素替换为c2中的元素
+//c1 = {a,b,c,...}; 将c1中的元素替换为列表中元素(不适用于array)
+//a.swap(b); 交换a和b的元素
+//swap(a,b); 与上面等价
+
+//大小
+//c.size(); 返回c中元素的数目(不支持forward_list)
+//c.max_size(); c可保存的最大元素数目
+//c.empty(); 若c中存储了元素,返回false,否则返回true;
+
+//添加/删除元素(不适用于array)
+//注:在不同的容器中这些操作的接口都不同
+//c.insert(args); 将args中的元素拷贝进c
+//c.emplace(inits); 使用inits构造c中的一个元素
+//c.erase(args); 删除args指定的元素
+//c.clear(); 删除c中的所有元素,返回void
+
+//关系运算符
+//所有容器支持== !=
+//关系运算符(无序容器不支持) <,<=,>,>=
+
+//获取迭代器
+//c.begin(), c.end()
+//c.cbegin(), c.cend() //返回const_iterator
+
+//反向容器的额外成员(不支持forward_list)
+//reverse_iterator  //按逆序寻址元素的迭代器
+//const_reverse_iterator
+//c.rbegin(), c.rend();	 //返回指向c的尾元素和首元素之前位置的迭代器
+//c.crbegin(), c.crend();  //返回const_reverse_iterator
+
+//注意,forward_list迭代器不支持递减去处符--
+//迭代器范围是由一对迭代器表示的,两个迭代器分别指向同一个容器的元素或者尾后元素
+//即begin 和 End 这种元素的范围是左闭合区间[begin,end)
+//我们可以通过反复递增begin来到达end,即end不在begin之前
+//使用左闭合区间的好处是可以通过 begin==end来判断是否还有元素
+//容器类型成员
+//对于一个反向的迭代器,使用++操作会得到上一个元素
+//容器的类型别名在泛型编程中非常有用
+//要使用这些类型,必须显式使用其类名
+std::list<std::string>::iterator;
+std::deque<int>::value_type;
+//begin()实际上有两个版本 一个是对非常量,一个是const,这样就不用面对一个const容器特意使用cbegin(),而使用begin()让编译器判断
+//以c开头的版本是c++新标准引入的,用以支持auto与begin和end函数结合使用
+
+//每个容器类型都定义了一个默认构造函数
+//除了array之外,其它容器的默认构造函数都会创建一个指定类型的空容器,且都可以接受指定容器大小和元素初始值的参数
+//C c; 默认构造函数,如果C是一个array,则c中元素按默认方式初始化,否则c为空
+//C c1(c2)
+//C c1 = c2 c1初始化为c2的拷贝,必须相同的类型,对于array两个必须大小相同
+//C c{...}
+//C c={...}
+//C c(b,e) 指定范围中的元素的拷贝,类型必须和C中元素类型一致
+//只有顺序容器(不包括array)的构造函数才能接受大小参数
+//C seq(n) seq包含n个元素,为此元素进行了值初始化;此构造函数是explicit的(string不适用)
+//C seq(n,t) 初始值为t
+
+//为一个新容器创建为另一个容器的拷贝的方法有两种:直接拷贝整个容器,
+//拷贝由一个迭代器对指定的元素范围[不要求容器类型相同,也不要求必须元素类型相同,只要能够转换]
+//list<const char*> authors = { "dddd","aaaaa","eeeee" };
+//forward_list<string> words(authors.begin(), authors.end());  //正确
+//与顺序容器大小相关的构造函数
+//vector<int>iver(10); //如果没有提供元素初始值,则标准库会创建一个值初始化器
+//[上面这条语句 每个元素都初始化为0,值初始化器可能是{}]
+//如果元素类型是内置类型或者是具有默认构造函数的类类型,可以只为构造函数提供一个容器大小参数
+
+//与内置数组一样,标准库array的大小也是类型的一部分
+//当定义一个array时,除了指定元素类型,还要指定容器的大小
+std::array<int, 2> test_new_array; //类型是保存42个int的数组 
+int test_old_array[2];
+std::array<int, 45>::size_type;//同样的在使用类型的类型时也要指定元素类型和大小
+
+//与其他容器不同,一个array默认构造函数生成一个非空的:包含了与其大小一样多的元素,这些元素被
+//默认初始化,就像一个内置数组中的元素那样.  如果对array进行列表初始化,初始值的数目必须等于或小于array的大小
+//和内置类型的变量一样,如果在函数内部定义了某种内置类型的数组,那么默认初始化会令数组含有未定义值
+
+void test_undefine() {
+	using std::cout;
+	using std::endl;
+	std::array<int, 2> utest_new_array; // ? ? 
+	std::array<int, 3>test = {}; // 0 0 0
+	std::array<int, 3>test2 = {1};  // 1 0 0
+	std::vector<int>iver(10); // 0 0 0 0 0 0 0 0 0...
+	int utest_old_array[2]; // ? ?
+	cout <<test_new_array[0]<< endl; //0
+	cout <<test_old_array[0]<< endl; //0
+	cout <<utest_new_array[0]<< endl; //未定义
+	cout <<utest_old_array[0]<< endl; //未定义
+	cout <<iver[0]<< endl; //0
+	for (auto i : test) {
+		cout << i << endl;
+	}
+	for (auto i : test2) {
+		cout << i << endl;
+	}
+	//注意:只有数组类型(新旧)+内置类型在函数体内不初始化才会出现未定义的行为
+	//而其他容器(使用name(num)构造)不会出现,在构造函数中给定了初始化器{}
+}
+
+//值得注意:虽然不能对内置数组类型进行拷贝或对象赋值操作,但array没有限制
+//int a2[] = a; //错误
+//a2 = a; //错误
+//array<int, 10>copy = digits; //正确: 只要数组类型匹配即合法(大小 + 类型)
+
+//赋值和swap
+//赋值运算符将其左边容器中的全部元素替换为右边容器中元素的[拷贝]
+//c1 = c2; //将c1内容替换为c2中元素的拷贝  如果两个容器原来大小不同,赋值运算后两者大小都与右边容器的原大小相同
+//c1 = {a, b, c}; //赋值后c1大小为3  c1的size变为3
+//由于右边运算对象的大小可能与左边运算对象的大小不同,因此array类型不支持assign,
+//也不允许用花括号包围的值列表进行赋值 但实测没有问题
+void test_array_assign() {
+	std::array<int, 10> aa1 = { 0,1 };
+	std::array<int, 10> aa2 = { 0 };
+	aa1 = aa2; //array支持但类型严格要求
+	//aa1;
+	aa2 = { 0 }; //实测没问题 (原本array不支持)
+}
 
 
 int main() {
@@ -1509,7 +1843,14 @@ int main() {
 	//test_class_1();
 	//test_TestDebug();
 	//test_StaticClass();
-	test_IO_buf();
+	//test_IO_buf();
+	//test_sstream();
+	//测试初始化
+	//int a; //若直接使用报错使用未初始化的值
+	//int b = {};
+	//std::cout /*<< a*/ << " " << b << std::endl;
+	//test_undefine();
+	test_array_assign();
 	system("pause");
 	return 0;
 }
