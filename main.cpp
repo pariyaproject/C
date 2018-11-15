@@ -1650,7 +1650,9 @@ void test_sstream() {
 
 //如果不确定应该使用哪种容器,可以在程序中只使用vector和list的公共的操作:使用迭代器,不使用下标
 //这样更改方便
+
 //接下来的操作对所有的容器(顺序,无序,关联,个别容器)都适用
+
 //每个容器都定义在一个头文件中,文件名与类型名相同,deque定义在头文件deque中
 //list定义在 list中, 容器均定义为模板类
 //例如对vector,需要提供额外信息来生成特定的容器类型,对大多数,但不是所有容器,还需要提供元素类型的信息
@@ -1791,9 +1793,270 @@ void test_array_assign() {
 	aa1 = aa2; //array支持但类型严格要求
 	//aa1;
 	aa2 = { 0 }; //实测没问题 (原本array不支持)
+	//c1 = c2  //将c1中的元素替换成c2中元素的拷贝, c1 c2必须有相同的类型
+	//c = {a, b, c} //将c1中的元素替换为初始化列表中元素的拷贝
+	//swap(c1, c2) //交换c1 c2中的元素,c1,c2必须有相同类型,swap通常比从c2向c1拷贝元素快
+	//c1.swap(c2)
+	// assign操作不适用关联容器和array
+	//seq.assign(b,e) //迭代器b 和 e所表示的范围中的元素
+	//seq.assign(i1) //将元素替换为初始化列表i1中的元素
+	//seq.assign(n,t) //将seq中的元素替换为n个值为t的元素
+
+	//赋值相关运算会导致指向左边容器内部的迭代器,引用和指针失效,而swap操作将容器内容交换不会导致指向容器的迭代器
+	//引用和指针失效(容器类型为array和string的情况除外)
+
+	//顺序容器定义了一个名为assign的成员,允许从不同但相容类型赋值,或子序列,但直接使用=不可
+	//list<string> names;
+	//vector<const char*> oldstyle;
+	//names = oldstyle; //错误: 容器类型不匹配
+	//names.assign(oldstyle.cbegin(),oldstyle.cend()); //正确
+	//由于旧元素被替换,传递给assign的迭代器不能指向调用assign的容器
+
+	//使用swap
+	//vector<string> s1(10); //10个
+	//vector<string> s2(20); //20个元素
+	//swap(s1,s2); //s1=>20个元素 s2=>10个元素 swap只是交换了两个容器的内部的数据结构
+	//除array外,swap不对任何元素进行拷贝,删除,插入,因此可以保证在常数时间内完成
+	//swap不会使得迭代器失效,但原本的迭代器已经属于不同的容器了
+	//但与其他容器不同,对一个string调用swap会导致迭代器,引用和指针失效
+
+	//swap两个array会真正交换它们的元素因此时间和元素的数目成正比
+	//新标准库提供成员函数版本的swap,也有非成员函数版本,但在泛型编程中使用非成员版本swap是一个好习惯
+
+	//容器大小操作 
+	//size 返回容器中
+	//empty 当size为0时返回布尔值true否则返回false
+	//max_size 返回一个大于或等于该类型容器所能容纳的最大元素数的值
+	//注意 forward_list不支持size
+
+	//关系运算符
+	//只能比较同类型的,比较两个容器实际上是进行元素的逐对比较,与string类似
+	//1.容器大小相同且所有元素都两两对应相等,则两个容器相等
+	//2.容器大小不同,但较小容器中每个元素都等于较大容器中的对应元素,则较小容器<较大容器
+	//3.如果两个容器都不是另一个容器的前缀子序列,则它们的比较结果取决于第一个不相等的元素的比较结果
+	//注意只有当元素的类型也定义了相应的比较运算符时,我们才可以使用关系运算符来比较两个容器
+
+
 }
 
+//以上是所有的容器都有的操作
+//顺序容器操作
+void test_seq_container() {
+	//向容器中添加元素
+	//除了array外所有标准库容器都提供灵活的内存管理
+	//
+	//forward_list有自己专有版本的insert 和emplace;
+	//forward_list不支持push_back和emplace_back
+	//vector和string不支持push_front和emplace_front
+	//
+	//c.push_back(t)  在c的尾部创建一个值为t或由args创建的元素,返回void
+	//c.emplace_back(args)
+	//c.push_front(t) 在c的头部创建一个值为t或由args创建的元素,返回void
+	//c.emplace_front(args)
+	//c.insert(p, t) 在迭代器p指向的元素之前创建一个值为t或由args创建的元素,返回指向新添加的元素的迭代器
+	//c.emplace(p, args) 
+	//c.insert(p, n, t) 在迭代器p指向元素之前插入n个值为t的元素,返回指向新添加的第一个元素的迭代器,若n==0,返回p
+	//c.insert(p, b, e) 将迭代器b和e指定的范围内的元素插入到迭代器p指向的元素之前,
+	//b和e不能指向c中的元素,返回指向新添加第一个元素的迭代器,空范围,返回p
+	//c.insert(p,i1) i1是一个花括号包围的元素值列表,将这些给定值插入到迭代器p指向的元素之前
+	//向一个vector , string 或 deque插入元素会使所有指向容器的迭代器,引用和指针失效
 
+
+	//使用push_back
+	//string也可使用push_back
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	using std::string;
+	using std::vector;
+	using std::istringstream;
+	string input1 = "d\r\n"
+		"e\r\n"
+		"f\r\n";
+	istringstream ssinput1(input1);
+	string test_string_push_back = "abc";
+	cout << test_string_push_back.max_size() << endl;
+	char test_input_word;
+	while (ssinput1 >> test_input_word) {
+		test_string_push_back.push_back(test_input_word);
+		//等价于 +=test_input_word
+		//调用后,在容器的尾部创建了一个新的元素,将container的size增大了1
+		//元素的值是拷贝
+	}
+	cout << test_string_push_back.max_size() << endl;
+	cout << test_string_push_back << endl;
+	//当用一个对象来初始化容器时,或将一个对象插入到容器中时,实际上放入到容器中的是对象值的一个拷贝
+	//而不对象本身
+
+	//test for <<vector
+	//vector<int> test_vector_output{ 1,2,3,5 };
+	//cout << test_vector_output; //不能直接输出
+
+	//push_front 很方便地生成一个逆序
+	//deque是vector的升级版,支持push_front
+	using std::list;
+	list<string> test_list_push_front{ "Second",{'T','h','r','i','d'} };
+	test_list_push_front.push_front("First");
+	//下面相当于调用元素的构造函数进而添加元素
+	test_list_push_front.emplace_front(10,'#'); //使用push_front就不行
+	for (auto i : test_list_push_front) {
+		cout << i << " ";
+	}
+	cout << endl;
+
+	//在容器的特定位置添加元素 (在位置之前,相当于在位置上(顶替原来的))
+	//vector,deque,list和string都支持insert成员,forward_list提供了特殊版本的insert
+	//每个insert函数都接受一个迭代器作为其第一个参数,迭代器指出了在容器中什么位置放置
+	//新元素,它可以指向容器中任何位置,包括容器尾后元素
+	//vector不支持push_front因此可以使用insert代替(可能很耗时)
+	vector<int> test_vector_insert{ 1,2,3 };
+	vector<int> test_vector_insert1{ 9,7,6 };
+	//test_vector_insert.insert(test_vector_insert.cbegin(), 0);
+	//test_vector_insert.insert(test_vector_insert.cbegin(), 5,0);
+	//test_vector_insert.insert(test_vector_insert.cbegin(), test_vector_insert1.rbegin(),test_vector_insert1.rend()-1);
+	test_vector_insert.insert(test_vector_insert.cbegin(), {7,7,7});
+	for (auto i : test_vector_insert) {
+		cout << i << " ";
+	}
+	cout << endl;
+	//通过使用insert的返回值,可以在容器中的一个特定位置反复插入元素
+	
+
+	//使用emplace操作
+	//这些操作构造而还是拷贝元素,使用push,insert成员函数是将元素类型的对象传递给它们
+	//这些对象被拷贝到容器中,而当调用一个emplace成员函数时,则是将参数传递给元素类型的
+	//构造函数,emplace成员使用为此参数在容器管理的内存空间中直接构造元素
+	//而调用push会创建一个局部临时对象,并将其压入容器中,emplace则会在容器内存空间直接创建对象
+
+	//访问元素
+	//如果容器没有元素,访问操作的结果是未定义的
+	//包括array在内的每个顺序容器都有一个front成员函数,而除froward_list之外的所有
+	//顺序容器都有一个back成员函数,这两个操作分别返回首元素和尾元素的引用 
+	//在解引用或调用back front之前最好检查是否有元素 否则未定义行为
+	//val1, val2是c中第一个元素值的拷贝
+	//auto val1 = *c.begin(),val2 = c.front();
+	//val1
+	//auto last = c.end();
+	//auto val3 = *(--last); //正确//但不能递减forward_list迭代器
+	//auto val4 = c.back(); //正确//但forward_list不支持
+
+	//在容器中访问元素的成员函数(front, back, 下标和at)返回的都是引用,
+	//如果容器是一个const对象,则返回值是const的引用
+	//下标访问的安全性
+	//如果希望下标是合法的,可以使用at成员函数,at成员函数类似下标运算符
+	//如果下标越界,at会抛出一个out_of_range异常
+
+	//删除元素
+	//非array容器也有多种删除元素的方式
+	//forward_list有特殊版本的erase
+	//forward_list不支持pop_back; vector和string不支持pop_front
+	//
+	//c.pop_back();  //删除c中的尾元素,若c为空,则函数行为未定义,函数返回void
+	//c.pop_front();  //删除c中的首元素,若c为空,则函数行为未定义,函数返回void
+	//c.erase(p);	//删除迭代器p所指定的元素,返回一个指向被删除元素之后元素的迭代器
+	//				//若p指向尾元素,则返回尾后迭代器,若p是尾后迭代器,则函数行为未定义
+	//c.erase(b, e);	//删除迭代器b和e范围内的元素,返回指向最后一个被删之后的元素的迭代器
+	//					//若e是一个尾后元素,则函数也返回尾后元素
+	//c.clear(); //删除c中的所有元素 返回void
+	//
+	//删除deque中除首尾位置之外的任何元素都会使所有迭代器,引用和指针失效
+	//指向vector或string中删除点之后位置的迭代器,引用和指针都会失效
+	//删除元素不检查参数,在删除元素之前,程序员必须确保它是存在的
+
+	//pop_front,pop_back成员函数分别删除首元素和尾元素
+	//注意这些操作返回void不返回元素的拷贝
+	//从容器内部删除一个元素 earse()
+	//elem1 = slist.erase(elem1, elem2);//调用后 elem1 == elem2
+
+	//特殊的forward_list操作
+	//当添加或删除一个元素,要获取元素的前驱,以便改变前驱的链接
+	//但是是forward_list(单向链表)无法获取前驱,
+	//因此在forward_list中添加或删除一个元素是通过给定元素之后的元素完成的
+	//因此forward_list没有定义insert,emplace和erase 
+	//而是定义了 insert_after, emplace_after ,和erase_after的操作
+	//为了支持这些操作,forward_list定义了before_begin,它返回一个首前迭代器
+	//类似于尾后迭代器
+
+	//注意单向链表的insert不同于之前的,它是在指定位置之后插入(不是当前位置)
+	//lst.before_begin()
+	//lst.cbefore_begin() 返回首前元素迭代器,不能解引用
+	//lst.insert_after(p, t) 在迭代器p之后的位置插入元素,t 是一个对象,n是一个
+	//lst.insert_after(p, n, t) 数量,b,e是表示范围的一对迭代器(b,e不能指向自己)
+	//lst.insert_after(p, b, e) il是一个花括号列表,返回一个指向最后一个插入元素的
+	//lst.insert_after(p, il) 迭代器,如果范围为空,则返回p,若p为尾后迭代器则函数行为未定义
+	//emplace_after(p, args) 使用args在p指定位置之后创建一个元素返回指向该元素的迭代器
+	//
+	//lst.erase_after(p); 删除p指向的位置之后的元素,或删除从b之后直到(但不包含)e
+	//lst.erase_after(b, e); 之间的元素,返回指向被删除元素之后元素的迭代器,若不存在
+	//返回尾后迭代器,如果p指向lst的尾元素或者是尾后迭代器,行为未定义
+	//注意:相当begin和end的范围似乎没有变化
+
+	//在使用forward_list添加或删除元素时必须关注两个迭代器
+	//一个指向要处理的元素,另一个指向前驱
+	std::forward_list<int> test_forward{ 1,2,3,4,5,6,7,8,9 };
+	auto prev = test_forward.cbefore_begin();
+	auto curr = test_forward.begin();
+	//***auto over = test_forward.end(); //不要这样写
+	//当删除元素时,尾后迭代器总是会失效
+	//不推荐vector这样写 (迭代器失效)
+	for (auto i = curr; i != test_forward.end(); ++prev, ++i) {
+		if (*i % 2 == 0) {
+			test_forward.emplace_after(prev);
+		}
+		else {
+			cout << *i << " ";
+		}
+
+	}
+	cout << endl;
+
+	//改变容器的大小
+	//可以使用resize来增大或缩小容器,与往常一样,array不支持resize
+	//如果当前大小大于所要求的大小,容器后部的元素会被删除;
+	//如果当前大小小于新大小,会将新元素添加到容器的后部
+	list<int>ilist(10, 44);
+	cout << ilist.size() << endl;
+	ilist.resize(6);
+	cout << ilist.size() << endl;
+	ilist.resize(12); //新增的元素进行值初始化
+	cout << ilist.size() << endl;
+	for (auto i : ilist) {
+		cout << i << " ";
+	}
+	cout << endl;
+	//如果resize缩小容器,则指向被删除元素的迭代器,引用和指针都会失效
+	//对vector,string deque进行resize可能导致迭代器的失效
+	//容器操作可能使迭代器失效
+	//向容器中添加元素后,
+	//vector string 存储空间可能被重新分配 or 插入位置之后的元素可能失效
+	//对于deque插入除首尾之外的的任何位置,失效,首尾的话会失效但指向存在的元素的引用和指针不会失效
+	//list和forward_list不会失效
+	//在容器中删除元素后,
+	//list forward_list 不会失效
+	//deque 同添加元素一样
+	//vector string同添加元素一样
+	//注意:当删除元素时,尾后迭代器总是会失效
+	//
+	//由于迭代器时刻可能失效,应当保证每次改变容器后重新定位迭代器
+	//尤其是vector string deque
+	//如果循环中调用的是insert或erase,更新迭代器很容易,这些操作返回迭代器
+
+	//vector对象是如何增长的
+	//为了支持快速随机访问 vector将元素连续存储,每个元素紧挨着前一个元素存储
+	//
+	//管理容量的成员函数
+	//允许与vector和string类的实现中内存分配部分互动
+	//shrink_to_fit只适用于vector string 和 deque
+	//capacity和reserve只适用于vector和string
+	//
+	//c.shrink_to_fit() 将capacity()减少为与size()相同的大小
+	//c.capacity() 不重新分配内存空间的话,c可以保存多少元素
+	//c.reserve(n) 分配至少能容纳n个元素的内存空间
+	//reserve并不改变容器中元素的数量,它仅影响vector预先分配多大的内存空间
+	//并且只有大于当前的capacity时才会分配否则什么都不做
+
+
+}
 int main() {
 	//输入输出
 	//cin_cout_cerr_clog();
@@ -1850,7 +2113,8 @@ int main() {
 	//int b = {};
 	//std::cout /*<< a*/ << " " << b << std::endl;
 	//test_undefine();
-	test_array_assign();
+	//test_array_assign();
+	test_seq_container();
 	system("pause");
 	return 0;
 }
