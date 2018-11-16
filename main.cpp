@@ -8,6 +8,8 @@
 #include <deque>
 #include <array>
 #include <forward_list>
+#include <stack>
+#include <queue>
 //包含来自标准库的头文件时使用<>否则""
 //class
 #include "bangumi_subject.h"
@@ -1758,14 +1760,14 @@ void test_undefine() {
 	using std::endl;
 	std::array<int, 2> utest_new_array; // ? ? 
 	std::array<int, 3>test = {}; // 0 0 0
-	std::array<int, 3>test2 = {1};  // 1 0 0
+	std::array<int, 3>test2 = { 1 };  // 1 0 0
 	std::vector<int>iver(10); // 0 0 0 0 0 0 0 0 0...
 	int utest_old_array[2]; // ? ?
-	cout <<test_new_array[0]<< endl; //0
-	cout <<test_old_array[0]<< endl; //0
-	cout <<utest_new_array[0]<< endl; //未定义
-	cout <<utest_old_array[0]<< endl; //未定义
-	cout <<iver[0]<< endl; //0
+	cout << test_new_array[0] << endl; //0
+	cout << test_old_array[0] << endl; //0
+	cout << utest_new_array[0] << endl; //未定义
+	cout << utest_old_array[0] << endl; //未定义
+	cout << iver[0] << endl; //0
 	for (auto i : test) {
 		cout << i << endl;
 	}
@@ -1898,7 +1900,7 @@ void test_seq_container() {
 	list<string> test_list_push_front{ "Second",{'T','h','r','i','d'} };
 	test_list_push_front.push_front("First");
 	//下面相当于调用元素的构造函数进而添加元素
-	test_list_push_front.emplace_front(10,'#'); //使用push_front就不行
+	test_list_push_front.emplace_front(10, '#'); //使用push_front就不行
 	for (auto i : test_list_push_front) {
 		cout << i << " ";
 	}
@@ -1914,13 +1916,13 @@ void test_seq_container() {
 	//test_vector_insert.insert(test_vector_insert.cbegin(), 0);
 	//test_vector_insert.insert(test_vector_insert.cbegin(), 5,0);
 	//test_vector_insert.insert(test_vector_insert.cbegin(), test_vector_insert1.rbegin(),test_vector_insert1.rend()-1);
-	test_vector_insert.insert(test_vector_insert.cbegin(), {7,7,7});
+	test_vector_insert.insert(test_vector_insert.cbegin(), { 7,7,7 });
 	for (auto i : test_vector_insert) {
 		cout << i << " ";
 	}
 	cout << endl;
 	//通过使用insert的返回值,可以在容器中的一个特定位置反复插入元素
-	
+
 
 	//使用emplace操作
 	//这些操作构造而还是拷贝元素,使用push,insert成员函数是将元素类型的对象传递给它们
@@ -2053,9 +2055,275 @@ void test_seq_container() {
 	//c.capacity() 不重新分配内存空间的话,c可以保存多少元素
 	//c.reserve(n) 分配至少能容纳n个元素的内存空间
 	//reserve并不改变容器中元素的数量,它仅影响vector预先分配多大的内存空间
+	//可能分配比需要更多的内存空间=>大于等于传递的参数
 	//并且只有大于当前的capacity时才会分配否则什么都不做
+	//c++11中可以调用shrink_to_fit来要求deque, vector或string退回不需要的内存空间
+	//但是调用shrink_to_fit并不保证一定退回内存空间
+	//
+	//capacity和size的区别
+	//size是指已经保存的元素的个数,,而capacity则是在不分配新的内存空间的前提下它最多可以保存多少个元素
+	vector<int> test_size_capacity;
+	cout << "Test size and capacity: " << endl;
+	cout << test_size_capacity.size() << "  " << test_size_capacity.capacity() << endl;
+	//test_size_capacity.insert(test_size_capacity.cend(),30,999);
+
+	auto last_changed_cap = test_size_capacity.capacity();
+	for (int i = 0; i < 31; ++i) {
+
+		if (test_size_capacity.capacity() != test_size_capacity.size() && last_changed_cap != test_size_capacity.capacity() && test_size_capacity.size() != last_changed_cap) {
+			last_changed_cap = test_size_capacity.capacity();
+			cout << "Capacity Change at " << i
+				<< "  Current Capacity is " << last_changed_cap
+				<< "  Current Size is " << test_size_capacity.size()
+				<< endl;
 
 
+
+		}
+		test_size_capacity.push_back(999); //第三次push_back的时候增加了
+	}
+	//上面两个是有区别的,使用for循环多次调用了push_back使得变量的capacity增长
+	//而一次性地插入不会
+	//test_size_capacity.shrink_to_fit();
+	cout << "Test size and capacity: " << endl;
+	//test_size_capacity.pop_back(); //比size少1
+	//test_size_capacity.reserve(130); //不使用reserve尝试后总是与size相同...
+	cout << test_size_capacity.size() << "  " << test_size_capacity.capacity() << endl;
+	//只要没有操作需求超出vector的capacity,vector就不重新分配内存
+
+	//额外的string操作
+	//构造string的其它方法
+	//string s(cp, n) s是cp指向的数组中前n个字符的拷贝,此数组至少包含n个字符
+	//string s(s2,pos2) s是string s2从下标pos2开始的字符的拷贝,若pos2>s2.size() ,构造函数未定义
+	//string s(s2, pos2, len2) s是string s2从下标pos2 开始len2个字符的拷贝,不管len2的值是多少,构造函数至多拷贝s2.size()-pos2个字符
+	//这些构造函数接受一个string或一个const char*参数(如果没有指定范围则未定义的操作)
+	//
+	const char *cp = "Hello World!!!";
+	char noNull[] = { 'H','i' };
+	string ss[8];
+	ss[0] = string(cp);
+	ss[1] = string(noNull, 2);
+	//ss[2] = string(noNull); //未定义 noNUll不是以空字符结束的
+	ss[2] = string(noNull, 1);
+	ss[3] = string(cp + 6, 5);
+	ss[4] = string(ss[0], 6, 5);
+	ss[5] = string(ss[0], 6);
+	ss[6] = string(*ss, 6, 20);
+	//ss[7] = string(*ss,16); //抛出异常 out_of_range
+	ss[7] = string(*ss, 8);
+	//总的来说:string类型多一个第二个参数下标,这个参数不能越界
+	for (auto i : ss) {
+		cout << i << endl;
+	}
+
+	//substr操作
+	//返回一个string,它是原始string的一部分或全部的拷贝
+	//可以传递给substr一个可选的开始位置和计数值
+	string test_sub(cp);
+	string s2 = test_sub.substr(0, 5);
+	string s3 = test_sub.substr(6);
+	string s4 = test_sub.substr(6, 11);
+	cout << s2 << "\n" << s3 << "\n" << s4 << endl;
+	//string s5 = test_sub.substr(19); //抛出异常
+
+	//string类型支持顺序容器的赋值运算符以及assign insert 和 erase操作
+	//除此之外还有额外的insert和erase版本(第一个参数不是迭代器,而是下标参数)
+	//s.insert(s.size(),5 ,'!') //s的末尾插入5个!
+	//s.erase(s.size() - 5, 5) //从s删除最后5个字符
+	//标准库还提供接受c风格字符数组的insert和assign版本
+	//s.assign(cp, 7);  //第二个参数指定多少个字符<=size()
+	//s.insert(s.size(),cp+7) //这样就相当于 s = cp; 注意 两个7意义不同
+
+	//s.insert(0,s2) 在s中位置0之前插入s2的拷贝
+	//s.insert(0,s2,0,s2.size()) 在s中位置0之前插入s2的从s2[0]开始的s2.size()个字符
+
+	//append和replace
+	//append操作是在string末尾进行插入操作的一种简写
+	//s.insert(s.size(), " !!!!");  
+	//s2.append(" !!!!"); 等价
+	//s.erase(11, 3); 
+	//s.insert(11, "xxx");
+	//s2.replace(11,3,"xxx");  等价以上两个语句
+	//插入文本可以不等删除文本
+
+	//s.insert(pos,args)
+	//s.erase(pos,len)
+	//s.assign(args)
+	//s.append(args)
+	//s.replace(range,args) range或是一个下标一个长度,或者是一对指向s的迭代器
+	//
+	//args可以是下列形式之一: append和assign可以使用所有形式
+	//str 字符串
+	//str,pos,len str中从Pos开始最多len个字
+	//cp,len 从cp指向的字符数组的最多len个字符
+	//cp 以空字符结尾的字符数组
+	//n,c  n个字符c
+	//b,e 迭代器b和e指定的范围
+	//初始化列表  花括号包围,以逗号分隔的字符列表
+	//具体的p324
+	//assign和append函数无须指定要替换string中哪个部分
+	//
+
+	//string搜索操作
+	//返回一个string::size_type,失败返回一个名为string::nps的static成员
+	//标准库将npos定义为一个const string::size_type类型并初始化为-1
+	//由于npos是一个Unsigned类型,此初始值意味着npos等于任何string最大的可能大小
+	//启发:想知道一个类型的最大值
+	//使用 decltype(type) x = -1
+	//
+	decltype(string::npos) x = -1;
+	cout << "string::npos max : " << x << endl;
+	string test_npos;
+	cout << "test_nops        : " << test_npos.npos << endl;
+
+	//未找到返回npos 否则返回下标
+	//s.find(args)  //查找s中args第一次出现的位置
+	//s.rfind(args)  //查找s中args最后一次出现的位置
+	//s.find_first_of(args)  //在s中查找args中任何一个字符第一次出现的位置
+	//s.find_last_of(args)  //在s中查找args中任何一个字符最后一次出现的位置
+	//s.find_first_not_of(args)  //在s中查找第一个不在args中的字符
+	//s.find_last_not_of(args)  //在s中查找最后一个不在args中的字符
+	//args
+	//c, pos   //从s中位置pos开始查找字符c ,pos默认为0
+	//s2, pos    //从s中位置pos开始查找字符串s2,pos默认为0
+	//cp, pos    //从s中位置pos开始查找指针cp指向的以空字符结尾的C风格字符串,pos默认为0
+	//cp, pos, n  //从s中位置pos开始查找指针cp指向的数组的前n个字符,pos和n无默认值
+
+	string test_string_find{ "Angel Beats!" };
+	//搜索以及其他string操作是大小写敏感的
+	cout << test_string_find.find('r') << endl; //返回npos
+	cout << test_string_find.rfind("ts") << endl; //9
+
+	string numbers("0123456789"), name("r2d2"),tele("1321d65156");
+	auto pos = name.find_first_of(numbers);  //2的下标是1
+	cout << pos << endl;//1
+	cout << tele.find_first_not_of(numbers) << endl; //返回d所在的下标
+
+	//使用参数一般用于循环搜索子字符串出现的所有位置
+	//while((pos = name.find_first_of(numbers,pos)) != string::npos){
+	//++pos}
+
+	//除了关系运算符,标准库string类型还提供了一组compare函数,这些函数与c标准的strcmp函数相似
+	//返回值0 正数 负数
+	//s.compare的几种参数形式
+	//s2  比较s和s2
+	//pos1, n1, s2 
+	//pos1, n1, s2, pos2, n2
+	//cp  比较s和cp指向的以空字符结尾的字符数组
+	//pos1,n1,cp
+	//pos1,n1,cp,n2
+	
+	//数值转换
+	//新标准库引入了多个函数,可以实现数值数据与标准库string之间的转换
+	int i = 45;
+	string s = std::to_string(i);
+	double d = std::stod(s);
+	int ii = std::stoi(s);
+	//要转换数值的string中的第一个非空白符必须是数值中可能出现的字符
+	string sss1 = "pi = 3.14ddd";//即使后面有字符,也只处理数值
+	//如果string不能转换为一个数值,抛出一个invalid_argument异常
+	double ddd = stod(sss1.substr(sss1.find_first_of("+-.0123456789")));
+	//没找到也会抛出异常 out of range
+	cout << ddd << endl;
+	//double ddd1 = stod(string("d3.1")); //抛出一个invalid_argument异常
+
+	//to_string(val)  //一组重载函数,返回值val的string表示,val可以是任何算术类型,小整数会被提升
+	//stoi(s,p,b)  //返回s的起始子串(表示整数内容)的数值,返回类型是int long unsigned long
+	//stol			//等,b表示转换所用的基数,默认值为10,p是size_t指针
+	//stoul			//用来保存s中第一个非数值字符的下标,p默认为0,(不保存下标)
+	//stoll
+	//stoull
+	//stof(s,p)		//返回s的起始子串(表示浮点数内容)的数值,返回类型分
+	//stod(s,p)		//别是float double longdouble 参数p的作用同上
+	//stold(s,p)
+	//
+	size_t low;
+	string sss2("2d");
+	stoi(sss2, &low);//注意不能开关就是一个非数值的string
+	cout << low << endl;
+
+	cout << "\nInput a Number:" << endl;
+	string user_input;
+	cin >> user_input;
+	using std::array;
+	array<int,3> base{ 8,10,16 };
+	for (auto i : base) {
+		//注意这个是将输入转换为10进制而不是返过来
+		cout << i << " Based: " << stoi(user_input, 0, i) << endl;
+	}
+
+
+}
+void test_adaptor() {
+	//容器适配器
+	//除了顺序容器外,标准库还定义了三个顺序容器适配器: stack queue 和 priority_queue
+	//适配器(adaptor)是标准库中一个通用概念,容器 迭代器,和函数都有适配器
+	//一个适配器是一种机制,能使某种事物的行为看起来像另外一种事物一样
+	//一个容器适配器接受一种已有的容器类型,使其行为看起来像一种不同的类型
+	//例如,stack适配器接受一个顺序容器(除array 和 forward_list外)
+	//并使其操作起来像一个stack一样
+	//size_type   一种类型,足以保存当前类型的最大对象的大小
+	//value_type  元素类型
+	//container_type  实现适配器的底层容器类型
+	//A a   创建一个名为a的空适配器
+	//A a(c)   创建一个名为a的适配器,带有容器c的一个拷贝
+	//关系运算符   返回底层容器的比较结果
+	//a.empty()  若a包含任何元素返回false,否则返回true
+	//a.size()	返回a中的元素数目
+	//swap(a,b)  a,b必须有相同类型,包括底层容器的类型
+	//a.swap(b)
+
+	//定义一个适配器
+	//每个适配器都定义两个构造函数:默认构造创建一个空对象,接受一个容器的构造函数
+	//拷贝该容器来初始化适配器
+	//假定deq是一个deque<int>
+	//初始化stack
+	//stack<int> stk(deq);
+	//默认情况下stack和queue是基于deque实现的
+	//priority_queue是在vector之上实现的,
+	//创建时重载一个适配器
+	//stack<string, vector<string>> str_stk;
+	//对于一个给定的适配器,容器使用有限制:具有添加删除元素的能力
+	//因此不能使用array,forward_list(要求能访问尾元素)
+	//stack只要求push_back,pop_back和 back操作,因此可以使用除array forward_list构造
+	//queue适配器要求back push_back front push_front, 因此可以构造于list deque之上
+	//priority_quue除了front(没有back) push_back pop_back操作之外还要求随机访问能力,因此可以构造于vector和deque,不能list
+
+	//栈适配器
+	//stack类型定义在stack头文件
+	using std::cout;
+	using std::cin;
+	using std::endl;
+	std::stack<int> intStack; //空栈
+	//填满
+	for (size_t ix = 0; ix != 10; ++ix)
+		intStack.push(ix);
+	while (!intStack.empty()) {
+		cout << intStack.top() << endl;
+		intStack.pop();
+	}
+	//Stack的操作(默认基于deque实现)
+	//s.pop()  //删除栈顶元素但不返回该元素值
+	//s.push(item)		//创建一个新元素压入栈顶,该元素通过拷贝或移动item而来
+	//s.emplace(args)	//由args构造
+	//s.top()  //返回栈顶元素,但不弹出栈
+
+	//只可使用适配器定义的自己的特殊操作,不能使用底层容器类型的操作
+
+
+	//队列适配器
+	//queue和priority_queue适配器定义在queue头文件中
+	//queue默认基于deque实现(可使用list,vector实现),priority_queue默认基于vector实现(可以使用deque)
+	//q.pop() 返回queue的首元素或priority_queue的最高优先级元素,但不删除元素
+	//q.front() 返回首元素或尾元素,但不删除此元素
+	//q.back() 只适用于queue
+	//q.top()  返回最高优先级元素,但不删除元素
+	//q.push(item)  在queue末尾或priority_queue中恰当位置创建一个元素
+	//q.emplace(args)  其值为item 或者由args构造
+
+	//queue使用FIFO先进先出的存储和访问策略
+	//priority_queue允许为队列中的元素建立优先级,新加入的元素会排在所有优先级比它低的已有元素之前
+	//
 }
 int main() {
 	//输入输出
@@ -2114,7 +2382,8 @@ int main() {
 	//std::cout /*<< a*/ << " " << b << std::endl;
 	//test_undefine();
 	//test_array_assign();
-	test_seq_container();
+	//test_seq_container();
+	test_adaptor();
 	system("pause");
 	return 0;
 }
