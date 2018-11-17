@@ -10,6 +10,10 @@
 #include <forward_list>
 #include <stack>
 #include <queue>
+#include <algorithm>
+#include <iterator>
+#include <numeric>
+#include <functional>
 //包含来自标准库的头文件时使用<>否则""
 //class
 #include "bangumi_subject.h"
@@ -2194,7 +2198,7 @@ void test_seq_container() {
 	cout << test_string_find.find('r') << endl; //返回npos
 	cout << test_string_find.rfind("ts") << endl; //9
 
-	string numbers("0123456789"), name("r2d2"),tele("1321d65156");
+	string numbers("0123456789"), name("r2d2"), tele("1321d65156");
 	auto pos = name.find_first_of(numbers);  //2的下标是1
 	cout << pos << endl;//1
 	cout << tele.find_first_not_of(numbers) << endl; //返回d所在的下标
@@ -2212,7 +2216,7 @@ void test_seq_container() {
 	//cp  比较s和cp指向的以空字符结尾的字符数组
 	//pos1,n1,cp
 	//pos1,n1,cp,n2
-	
+
 	//数值转换
 	//新标准库引入了多个函数,可以实现数值数据与标准库string之间的转换
 	int i = 45;
@@ -2246,7 +2250,7 @@ void test_seq_container() {
 	string user_input;
 	cin >> user_input;
 	using std::array;
-	array<int,3> base{ 8,10,16 };
+	array<int, 3> base{ 8,10,16 };
 	for (auto i : base) {
 		//注意这个是将输入转换为10进制而不是返过来
 		cout << i << " Based: " << stoi(user_input, 0, i) << endl;
@@ -2324,6 +2328,297 @@ void test_adaptor() {
 	//queue使用FIFO先进先出的存储和访问策略
 	//priority_queue允许为队列中的元素建立优先级,新加入的元素会排在所有优先级比它低的已有元素之前
 	//
+
+}
+//use for bind() test
+bool check_size(const std::string &s, std::string::size_type sz) {
+	return s.size() >= sz;
+}
+void test_algorithm() {
+	//泛型算法
+	//容器自身定义的方法少(添加删除元素 访问首尾元素 确定容器空否 首前尾后的迭代器)
+	//泛型算法:查找特定元素 替换删除一个特定值 重排元素顺序
+	//大多数算法都定义在头文件algorithm中
+	//标准库还在头文件numeric中定义了一组数值泛型算法
+	//一般情况下通过遍历由两个迭代器指定的一个元素范围进行操作
+
+	//find
+	using std::string;
+	using std::vector;
+	vector<string> vstring1{ "sfdsf","dsfasf","a value","dddd" };
+	string sval1 = "a value";
+	auto result1 = std::find(vstring1.cbegin(), vstring1.cend(), sval1);
+	using std::cout;
+	using std::endl;
+	cout << (result1 == vstring1.cend() ? "No iteam" : string("At ").append(std::to_string(std::distance(vstring1.cbegin(), result1)))) << endl;
+	//如果没有找到目标元素,则返回第二个参数end()[注意是尾后元素,不指向一个有效元素]
+	//find也能用在内置的数组上
+	//此时传递的参数是指针类型
+	//可以使用标准库提供的std::begin()得到
+
+	//算法永远不会执行容器的操作,它只会运行于迭代器之上,执行迭代器的操作
+	//泛型算法永远不会改变底层容器的大小,算法可能改变容器中保存的元素的值,也可能在容器中移动元素,但不会直接添加删除元素
+
+	//find的算法流程本质就是一个逐个循环对比==
+
+	//标准库提供了超过100个算法
+	//除了少数例外,标准库算法都对一个范围内的元素进行操作
+	//接受输入范围的算法总是使用前两个参数来表示此范围(要处理的第一个元素和最后一个元素后一个的迭代器)
+
+	//只读算法
+	//不改变元素,find就是这样一种算法,count函数也是
+	//另一个只读算法是accumulate,它定义在numeric中,接受三个参数,前两个范围,第三个是和的初值
+	//假定vec是一个整数序列: 对vec中的元素求和 和的初值是0(决定了函数中使用哪个加法运算符以及返回值的类型)
+	//int sum = accumulate( vec.cbegin(), vec.cend(), 0)
+	//
+
+	//算法和元素类型
+	//accumulate将第三个参数作为求和起点,这蕴含着一个假定:将元素类型加到和的类型上的操作必须是可行的
+	//即序列中元素的类型必须与第三个参数匹配,或能转换为第三个参数的类型
+	//例子:  string定义了+运算符
+	//string sum = accumulate(vec.cbegin(), vec.cend(), string(""));
+	//
+	//操作两个序列的算法
+	//另一个只读算法是equal,用于确定两个序列是否保存相同的值
+	//它将第一个序列中的每个元素与第二个序列中的对应元素进行比较,都相等true否则false
+	//接受三个参数(两个范围,第三个是第二个序列的首元素迭代器)
+	//equal(vec.cbegin(), vec.cend(), another.cbegin())
+	//可以用来比较两个不同类型的容器中的元素,也可不同的元素 只要能相互==操作
+	//但是equal基于非常重要的假设,第二个序列至少与第一个序列一样长
+
+	//写容器元素的算法
+	//一些算法将新值赋予序列中的元素.当使用这类算法时,必须注意序列原大小至少不小于
+	//我们要求算法写入的元素数目
+	//一些算法会向输入范围写入元素,这些算法本质上并不危险,它们最多写入与给定序列一样多的元素
+	//例如fill接受一对迭代器表示一个范围,还授受一个值作为第三个参数
+	//fill(vec.begin(), vec.end(), 0); //将每个元素重置为0
+	//用一个单一的迭代器表示第二个序列的算法都假定第一个序列至少与第一个一样长
+	//算法不检查写操作 [程序员确保]
+	//函数 fill_n接受一个单迭代器,一个计数值,和一个值,它将给定值赋予迭代器指向的元素开始
+	//的指定个元素,可以用fill_n将一个新值赋予vector中的元素
+	//vector<int> vec;
+	//fill_n(vec.begin(),vec.size(),0); //第二个元素确保不大于序列的大小
+	//
+	//back_inserter (插入迭代器 定义在<iterator>的一个函数)
+	//一种保证算法有足够元素空间来容纳输出数据的方法是使用插入迭代器
+	//当通过一个迭代器向容器元素赋值时,值被赋予迭代器指向的元素
+	//当通过插入迭代器(insert_iterator)时,一个与赋值号右侧值相等的元素被添加到容器中
+
+	//back_inserter接受一个指向容器的引用,返回一个与该容器绑定的插入迭代器
+	//当通过此迭代器赋值时,赋值运算符会调用push_back将一个具有给定值的元素添加到容器中
+	vector<int> vec1;
+	auto it = back_inserter(vec1); //没有std
+	*it = 42; //现在有一个元素42
+	*it = 55;
+	*(++it) = 60;
+	++it;
+	++it; //递增操作并不影响push_back的操作,因此可以fill_n中使用
+	*(++it) = 70;
+	for (auto i : vec1) {
+		cout << i << " "; //42 55 60 70
+	}
+	cout << endl;
+	//常使用back_inserter来创建一个迭代器作为算法的目的位置来使用
+	//例如
+	//vecotr<int> vec;//空向量
+	//fill_n(back_inserter(vec), 10, 0);//添加10个元素到vec
+
+	//拷贝算法
+	//是另一个向目的位置迭代器指向的输出序列中的元素写入数据的算法
+	//算法接受三个迭代器,前两个输入范围,第三个表示目的序列的起始位置
+	//将输入范围中的元素拷贝到目的序列中,目的序列至少要包含与输入序列一样多的元素
+	int a1[] = { 0,1,2,3,4,5,6,7,8,9 };
+	int a2[sizeof(a1) / sizeof(*a1)];
+	//ret指向拷贝到a2的尾元素之后的位置,方便迭代所有有效的元素
+	auto ret = std::copy(std::begin(a1), std::end(a1), a2);
+	for (auto i : a2) {
+		cout << i << " "; //
+	}
+	cout << endl;
+	//
+	//很多算法提供一个copy版本
+	//例如replace算法读入一个序列,并将其中掺等于给定值的元素都改写成另一个值
+	//此算法接受4个参数,前两个迭代器,后两个一个要搜索的值,一个是新值
+	//replace(ilst.begin(), ilst.end(), 0, 42); //0全部替换成42
+	//如果希望保留原序列不变,可以调用replace_copy,此算法接受额外第三个迭代器参数
+	//replace_copy(ilst.cbegin(), ilst.cend(),back_inserter(iver), 0, 42);
+
+	//重排容器元素的算法
+	//sort算法接受两个迭代器,表示要排序的元素范围,
+	//sort是利用元素类型的<运算符来实现的
+	//unique算法"消除"重复项(只是将重复的放在末尾了,算法都不能增删元素的),并返回一个指向不重复范围末尾的迭代器
+	//使用unique会返回一个最后一个不重复元素的下一个位置
+	//利用返回值调用容器的earse做到真正删除元素
+
+	//定制操作
+	//很多算法会比较输入序列中的元素< == ,标准库还为这些算法定义了额外的版本
+	//允许提供自己定义的操作来代替默认运算符
+	//例如,sort算法默认使用元素类型的<运算符,但可能排序顺序与<不同,或是未定义<运算
+	//这种情况下,需要重载sort的默认行为
+
+	//向算法传递函数:,sort的第二个版本,重载过的,接受第三个参数,此参数是一个谓词
+	//谓词是一个可调用的表达式,其返回结果是一个能用作条件的值
+	//标准库算法使用的谓词有两类:
+	//一元谓词(只接受单一参数) 二元谓词(两个参数),接受谓词参数的算法对输入序列
+	//中的元素调用谓词,因此,元素类型必须能转换为谓词参数类型
+	//接受一个二元谓词参数的sort版本用这个来代替<比较元素
+	//bool isShorter(const string &s1, const string &s2){};
+	//sort(words.begin(), words.end(), isShorter);
+	//使用stable_sort可以保持sort之前的顺序,因此在调用之前一定要先字典排好
+	//再使用这个进行二次排序
+
+	//lambda表达式
+	//根据算法接受一元谓词还是二元,传递给算法的谓词必须严格接受一个或两个参数
+	//但是可能需要参考一些其他的参数
+
+	//find_if算法来查找第一个具有特定大小的元素类似find
+	//find_if算法接受一对迭代器,表示一个范围,但与find不同的是,find_if第三个参数是一个谓词(一元)
+	//find_if对输入序列中的每个元素调用这个谓词,它返回第一个使谓词返回非0值的元素
+	//如果不存在使谓词返回非0值的元素,则返回尾迭代器
+
+	//lambda c++ 11
+	//可以向一个算法传递的任何类别的可调用对象,对于一个对象或一个表达式
+	//如果可以对其使用调用运算符,则称它可调用的,即e是一个可调用的表达式,则可以 e(args)
+	//目前为止,使用过的仅有两种可调用对象是函数和函数指针
+	//可以理解lambda表达式是一个未命名的内联函数
+	//与任何函数类似,一个lambda具有一个返回类型,一个参数列表和一个函数体
+	//但与函数不同,lambda可能定义在函数内部
+	// [capture list](parameter list) -> return type {function body }
+	//capture list是一个lambda所在函数中定义的局部变量的列表(通常为空)
+	//其他三个与任何函数一样,但是不同的是lambda必须使用尾置返回来指定返回类型
+	//可以忽略参数列表和返回类型(无参数,返回类型根据函数体,无有效return则为void),但必须包含捕获列表和函数体
+	auto f = [] {return 45; };
+	int(*ff)() = f; //
+	//定义了一个可调用对象f,它不接受参数 返回45
+	cout << ff() << endl;
+
+	//向lambda传递参数
+	//调用一个lambda时给定的实参被用来初始化lambda的形参,通常类型必须匹配,与普通函数不同
+	//lambda不能有默认参数,因此数目相等
+	//空捕获列表表明此lambda不使用它所在函数中的任何局部变量,
+	//stable_sort(words.begin(), words.end(),
+	//				[](const string &a,const string &b)
+	//					{return a.size()<b.size();});
+
+	//使用捕获列表
+	//虽然一个lambda可以出现在一个函数中,使用其局部变量,但它只能使用那些明确指明的变量
+	//一个lambda通过将局部变量包含在其捕获列表中来指出将会使用这些变量
+	//一个lambda只有在其捕获列表中捕获一个它所在函数中的局部变量,才能在函数体中使用
+
+	//调用find_if
+	vector<string> words{ "12","123","1234","12345","12345678" };
+
+	//可以封装成一个函数
+	unsigned sz = 4;
+	auto wc = find_if(words.begin(), words.end(),
+		[sz](const string &a)
+	{
+		return a.size() >= sz;
+	});
+	cout << distance(words.begin(), wc) << endl;
+	//注意distance的两个参数 必须在是否常量上一致,cbegin cend 成对
+
+	//for_each算法
+	//此算法接受一个可调用对象,并对输入序列中每个元素调用此对象 
+	for_each(wc, words.end(),
+		[](const string &a) {
+		cout << a << endl;
+	});
+	//捕获列表只用于局部非static变量,
+	//lambda可以直接使用局部static变量和它所在函数之外声明的名字
+
+	cout << "size: " << words.size() << endl;
+	cout << "end - begin: " << words.cend() - words.cbegin() << endl;
+	//注意begin就相当于words[0] 其实就是下标相减 end = words[5] 5个元素 实际不存在
+
+	//当定义一个lambda时,编译器生成一个与lambda对应的新的(未命名的)类类型
+	//可以理解当向一个函数传递一个lambda时,同时定义了一个新类型和该类型的一个对象:
+	//传递的参数就是此编译器生成的类类型的未命名对象类似的,当使用auto定义一个用lambda初始化
+	//的变量时,定义了一个从lambda生成的类型的对象
+	//默认情况下,从lambda生成的类都包含一个对应该lambda所捕获的变量的数据成员
+	//类似任何普通类的数据成员,lambda的数据成员也在lambda对象创建时被初始化
+
+	//值捕获
+	//类似参数传递,变量的捕获方式也可是值或引用采用值捕获的前提是变量可以拷贝
+	//与参数不同,被捕获的变量的值是在lambda创建时拷贝,而不是调用时拷贝,因此创建完成之后改变
+	//变量的值不影响lambda
+	//与之相对的可以使用引用的捕获[&sz] 例如Iostream
+	//引用要请注意变量的生命周期
+
+	//隐式捕获
+	//为了能够隐式(让编译器操作),在捕获列表中写一个&或=
+	//&告诉编译器采用捕获引用的方式, =则表示采用值捕获的方式
+	//隐式和显式可以混合使用 [&,sz] [=,&os] 注意第一个必须是=/&表明默认的操作
+	//并且不能前引用后也引用这样一样的
+
+	//可变lambda
+	//默认情况下,对于一个值被拷贝的变量,lambda不会改变其值,如果需要改变的话
+	//必须在参数列表后加上关键字mutable,因此可变lambda能省略参数列表
+	auto fff = [sz]()mutable -> int {return ++sz; };
+	//如果没有mutable的声明,return语句就会报错
+	//位置不能放错
+	cout << fff() << endl;
+	//对于一个使用引用捕获的变量只依赖引用是否是const
+
+	//指定lambda返回类型
+	//[注意:如果一个lambda体包含return之外的任何语句,则编译器假定返回void]
+	//不过这个在不同的编译器表现可能不同,建议写上返回类型
+	auto ffff = [] {}; //也可
+	//算法transform接受三个迭代器和一个可调用对象,前两个输入范围,第三个是目的位置迭代器
+	//当参数1==参数3,transform交输入序列中每个元素替换为可调用对象操作该元素得到的结果
+	//这个没有保护,输入范围一定少于等于后者
+	transform(words.begin(), words.end(), words.begin(),
+		[](string& s) //参数也可是 string /const ...没有要求
+	{
+		if (s.size() < 5) {
+			s += "d";
+			return "[" + s + "]";
+		}
+		else {
+			return "[" + s + "]";
+		}
+
+	});
+	for (auto i : words) {
+		cout << i << " "; //
+	}
+	cout << endl;
+
+	//参数绑定
+	//对于 那种只在一两个地方使用的简单操作,lambda表达式最有用
+	//很多地方使用的话,通常应该定义一个函数,类似的复杂也用函数
+	//如果捕获列表为空,通常可以用函数代替,但是有的话不容易替换(参数个数问题)
+
+
+
+	//标准库 bind 函数 c++11
+	//可以解决向check_size传递一个长度参数的问题
+	//它定义在头文件functional中
+	//可以将bind看成一个通用的函数适配器,它接受一个可调用对象,生成一个新的可调用对象
+	//来"适应"原对象的参数列表
+	// auto newCallable = bin(callable, arg_list);
+	//其中,newCallable本身是一个可调用对象,arg_list是一个逗号分隔的参数列表
+	//对应给定的callable的参数.即 当调用 newCallable时,newCallable会调用callable
+	//并传递给arg_list中的参数 arg_list中的参数可能包含形如_n的名字,其中n是
+	//一个整数,这些参数是点位符,表示newCallable的参数,它们占据了传递给newCallable的
+	//参数的"位置",数值n表示生成的可调用对象中参数的位置:
+	//_1为newCallable的第一个参数, _2为第二个参数
+	//[注意使用标准库的std::placeholders::_n]
+
+	//绑定check_size的sz参数
+	auto check6 = bind(check_size, std::placeholders::_1, 6);
+	//_1出现在args_list的第一个表明调用的check_size的第一个参数用check6的1号参数
+
+	//这样可以代替之前的lambda表达式
+	words = { "12","123","1234","12345","12345678" };
+	auto wc2 = find_if(words.begin(), words.end(),
+		bind(check_size, std::placeholders::_1, sz)
+	);
+	cout << distance(words.begin(), wc2) << endl;
+
+	//使用placeholders名字
+	//_n名字都定义在一个名为placeholders的命名空间中,而这个命名
+	//空间本身定义在std命名空间
 }
 int main() {
 	//输入输出
@@ -2383,7 +2678,8 @@ int main() {
 	//test_undefine();
 	//test_array_assign();
 	//test_seq_container();
-	test_adaptor();
+	//test_adaptor();
+	test_algorithm();
 	system("pause");
 	return 0;
 }
