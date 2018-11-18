@@ -14,6 +14,8 @@
 #include <iterator>
 #include <numeric>
 #include <functional>
+#include <map>
+#include <set>
 //包含来自标准库的头文件时使用<>否则""
 //class
 #include "bangumi_subject.h"
@@ -2619,6 +2621,380 @@ void test_algorithm() {
 	//使用placeholders名字
 	//_n名字都定义在一个名为placeholders的命名空间中,而这个命名
 	//空间本身定义在std命名空间
+	//
+
+	//一般用bind修正函数的参数(安排参数的顺序)
+	//f是一个可调用对象,有5个参数
+	using namespace std::placeholders;
+	//auto g = bind(f, a, b, _2, c, _1);
+	//g(_1, _2) = > f(a, b, _2, c, _1);
+	//用bind重排参数顺序,因此可以使用bind来从小于判定改成大于判定
+	//
+	//绑定引用参数
+	//默认情况下,bind的那些不是占位符的参数被拷贝到bind返回的可调用对象中
+	//但是,与lambda类似,有时对有些绑定的参数希望以引用方式传递,或是要绑定参数类型无法拷贝
+	//例如一个函数
+	//ostream &print(ostream &os, const string &s, char c)
+	//不能直接使用bind来代替对os的捕获
+	//bind(print,os, _1 ,' ');
+	//如果要传递给bind一个对象而又不拷贝它,必须使用标准库ref函数
+	//bind(print, ref(os), _1, ' ');
+
+	//函数ref返回一个对象,包含给定的引用,此对象是可以拷贝的
+	//还有一个函数cref,生成一个保存const 引用的类,两个函数也定义在头文件functional
+
+}
+//用于打印的宏函数
+#define PRINT_C(c)\
+	for (auto i : c) {\
+		std::cout << i << " ";\
+	}\
+	std::cout << std::endl;
+
+void test_iterator() {
+	//除了为每个容器定义的迭代器之外,标准库在头文件iterator中还定义了额外几个迭代器
+	//插入迭代器  绑定在一个容器上,可用来向容器插入元素
+	//流迭代器  绑定在输入输出流上,可用来遍历所关联的IO流
+	//反向迭代器  迭代器向后而不是向前移动,除了forward_list之外的标准库容器都有反向迭代器
+	//移动迭代器  不是拷贝其中的元素,而是移动它们
+
+	//插入器是一种迭代器适配器,接受一个容器生成一个迭代器,能实现向给定容器添加元素
+	//当通过一个插入迭代器赋值时,该迭代器调用容器操作来向给定容器的指定位置插入一个元素
+	//操作有
+	//it = t ;  在it指定的当前位置插入值t,依赖于绑定的容器,分别调用c.push_back(t)
+	// c.push_front(t) 或 c.insert(t,p) p为传递给inserter的迭代器位置
+	//*it , ++it, it++  这些操作虽然存在,但不会对it做的任何事,每个操作都返回it
+	//
+	//插入器有三种类型,差异在于元素插入的位置
+	//back_inserter()  创建一个使用push_back的迭代器
+	//front_inserter   创建一个使用push_front的迭代器
+	//inserter 创建一个使用insert的迭代器,接受第二个参数,必须指向给定容器的迭代器,插入给定的元素之前
+	//只有绑定容器支持相关的操作才能调用相关的插入器函数
+
+	//inserter:  
+	//*it = val;  //等价
+	//it = c.insert(it,val);
+	//++it;  //等价
+
+	using std::list;
+	using std::cout;
+	using std::cin;
+	list<int> lst{ 1,2,3,4 };
+	list<int> lst2, lst3;
+
+	copy(lst.cbegin(), lst.cend(), front_inserter(lst2));
+	PRINT_C(lst2); // 4 3 2 1
+	copy(lst.cbegin(), lst.cend(), inserter(lst3, lst3.begin()));
+	PRINT_C(lst3); // 1 2 3 4
+
+	//iostream迭代器
+	//虽然iostream类型不是容器,但标准库定义了可以用于这些IO类型对象的迭代器
+	//istream_iterator读取输入流
+	//ostream_iterator向输出流写数据
+	//这些迭代器将它们对应的流当作一个特定类型的元素序列来处理,通过使用流迭代器,可以用
+	//泛型算法从流对象读取数据以及向其写入数据
+
+	//当创建一个流迭代器时,必须指定迭代器将要读写的对象类型,一个istream_iterator使用
+	//>>来读取流,因此,istream_iterator要读取的类型必须定义了运算符
+	//可以默认初始化值,创建一个可以当作尾后值使用的迭代器
+	//istream_iterator<int> int_it(cin);  //从cin读取int
+	//istream_iterator<int> int_eof;  //尾后迭代器
+	//ifstream in("afile");
+	//istream_iterator<string> str_it(in); //从"afile"读取字符串
+	//
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	//允许使用懒惰求值(编译器不保证迭代器立即从流读取数据),
+	//保证在第一次解引用迭代器之前从流中读取数据的操作已经完成
+	//[注意:只要声明了一个istream_iterator,就会执行cin从流中读取数据,不一定]
+	//std::istream_iterator<int> in_iter(cin); //从cin读取int
+	std::istream_iterator<int> eof;  //istream尾后迭代器
+	std::vector<int> vec;  //用来存储的vector
+	//while (in_iter != eof) { 
+	//	//注意一旦关联的流遇到了文件尾或遇到了IO错误
+	//	//[这点很有用,当输入类型与期望不符,IO便出错直接终止错误值赋值]
+	//	//迭代器的值就会与尾后迭代器相等
+	//	vec.push_back(*in_iter++);
+	//}
+	//PRINT_C(vec);
+
+	//循环赋值可能有些难用, 可以使用构造
+	//但也会丢失首元素指针
+	//cout << "#### " << *in_iter++ << endl; // 7
+	//std::vector<int> vec2(in_iter, eof); // 7 8 9
+	//PRINT_C(vec2);
+	//cin.clear();
+	//std::cin.clear(std::cin.rdstate() & ~std::cin.failbit & ~std::cin.badbit);
+	//cout << "#### " << *in_iter++ << endl; // 7  仍然从开始读取
+	//cout << "#### " << *in_iter++ << endl; // 7
+	//cout << "#### " << *in_iter++ << endl; // 7
+	//std::vector<int> vec3(in_iter, eof); // 7
+	//PRINT_C(vec3);
+	//[注意:出现以上情况的原因是每次使用++时,流迭代器会检查流对象是否有效,无效则无法getVal]
+	//[GetVal的实现就是每次操作输入流>>,因此这终归是一个迭代器,不存储的任何数据,现取现用]
+	//[也就是说如果在某个函数中对这个流进行了++操作就会消耗一次输入,并且不可找回旧的]
+	//[之所以*in_iter能返回值,是因为内置一个temp变量存储上个成功取到的值,返回它]
+
+	//istream_iterator<T> in(is); //in从输入流is读取类型为T的值
+	//istream_iterator<T> end;  //类型T的迭代器,表示尾后位置
+	//in1 == in2  //两个必须读取相同类型,如果它们都是尾后迭代器,或绑定相同的输入,则两者相等
+	//in1 != in2  
+	// *in 返回从流中读取的值
+	//in->mem  与(*in).mem的含义相同
+	//++in, in++  使用元素类型所定义的>>运算符从输入流中读取下一个值
+	//
+	//使用算法操作流迭代器
+	std::istream_iterator<int> inin(cin);
+	cout << std::accumulate(inin, eof, 100/*要加上的初始值*/) << endl;
+
+	//类似的使用ostream_iterator<T>
+	//要求元素类型可以使用<<运算符,可以提供可选的第二个参数(必须C风格字符串),
+	//在输出每个元素后都会打印此字符串.必须将ostream_iterator绑定到一个指定的流
+	//不允许空的或表示尾后位置的ostream_iterator
+	//ostream_iterator<T> out(os);
+	//ostream_iterator<T> out(os,d); 值写到输出流os中,每个值后面都输出一个d,d指向一个空字符结尾的字符数组
+	//out = val;  用<<运算符将val写入到out所绑定的ostream中,val类型与out可写的类型兼容
+	//*out, ++out, out++;  存在但不做任何事 返回out
+
+	//可以用ostream_iterator来输出值的序列
+	std::ostream_iterator<int> out_iter(std::cout, " ");
+	std::vector<int> vec4{ 8,7,6,3,2,1 };
+	for (auto e : vec4)
+		out_iter = e;//*out_iter++ = e;
+	cout << endl;
+
+	//可以通过调用copy来打印vec中的元素
+	copy(vec4.begin(), vec4.end(), out_iter);
+	cout << endl;
+
+	//反向迭代器
+	//是在容器中从尾元素向首元素反向移动的迭代器,对于反向迭代器,递增操作含义会反
+	//除了forward_list之外,其他容器都支持反向迭代器,
+	//可以通过调用rbegin,rend,crbegin,crend成员函数获得反向迭代器
+	//这些成员函数返回指向容器尾元素和首前元素
+	//反向迭代直接使用
+	//string(line.crbegin(),rcomma)会反序打印单词
+	//应当通过调用reverse_iterator的base成员函数来完成, 返回其对应的普通迭代器
+	//string(rcomma.base(), line.cend()); //请注意base前后两个指向的元素不同,差了一个位置
+	//p364
+}
+void test_algorithm_struct() {
+	//算法要求的迭代器操作可以分为5个迭代器类别
+	//输入迭代器
+	//输出迭代器
+	//前向迭代器
+	//双向迭代器
+	//随机访问迭代器
+
+	//5类迭代器
+	//迭代器也定义了一组公共的操作
+	//算法sort要求随机访问迭代器,array,deque,string,vector的迭代器都是随机访问迭代器
+	//用于访问内置数组元素的指针也是
+
+	//算法的形参模式
+	//alg(beg, end, other args);
+	//alg(beg, end, dest, other args);
+	//alg(beg, end, beg2, other args);
+	//alg(beg, end, beg2, end2, other args);
+
+	//dest参数是一个表示算法可以写入的目的位置的迭代器,算法假定按需要写入数据,不管
+	//写入多少个元素都是安全的,向输出迭代器定稿数据的算法都假定目标空间足够容纳
+	//(一般是插入迭代器或是ostream_iterator)
+	//使用beg2的假定至少与beg和end 表示的范围一样大
+
+	//算法命名规范
+	//一些算法使用重载形式传递一个谓词
+	//unique(beg, end);  //使用 == 运算符比较元素
+	//unique(beg, end, comp);  //使用comp比较元素
+	//将相邻的重复元素删除(只是放到最后)返回一个unique的尾后元素
+	//if版本的算法
+	//find(beg, end, val); //查找输入范围中val第一次出现的位置
+	//find_if(beg, end, pred);  //查找第一个令pred为真的元素
+	//区分拷贝元素的版本和不拷贝元素的版本
+	//默认情况下重排元素的算法将重排后的元素写回给定的输入序列中,这些算法还提供另外一个版本
+	//将元素写到一个指定的输出目的位置,它们名字后加_copy
+	//reverse(beg, end);  //反转输入范围中元素的顺序
+	//reverse_copy(beg, end ,dest);  //将元素逆序拷贝到dest
+	//一些算法同时提供 _copy和 _if版本
+	//remover_if(v1.begin(), v1.end(),
+	//				[](int i){return i%2;}); //从v1中"删除"奇数元素
+	//remove_copy_if(v1.begin(), v1.end(), back_inserter(v2),
+	//				[](int i) {return i%2;}); //将偶数元素从v1拷贝到v2,v1不变
+
+	
+	//特定容器算法
+	//与其他容器不同链表类型list和forward_list定义了几个成员函数形式的算法
+	//特别的 它们定义了独有的sort, merge, remove, reverse和 unique
+	//通用版本的sort要求随机访问迭代器,链表类型定义的其他算法的通用版本可以用于链表但代价
+	//太高(需要真正的交换元素的位置)
+	//因此对于list,forward_list 应该优先使用成员函数版本的算法而不是通用算法
+	//lst.merge(lst2) 将来自lst2的元素合并入lst,lst和lst2必须是有序的
+	//lst.merge(lst2, comp) 元素将从lst2中删除,合并之后 lst2为空,第一个版本使用<,第二个用谓词
+	//lst.remove(val)  //调用erase删除掉与给定值相等(==)或令一元谓词为真的第一个元素
+	//lst.remove_if(pred)
+	//lst.reverse()  //反转lst中元素的顺序
+	//lst.sort()  //使用<或给定比较操作排序元素
+	//lst.sort(comp)  
+	//lst.unique()  //调用erase删除同一个值的连续拷贝
+	//lst.unique(pred)  
+
+	//splice成员(list和forward_list的成员函数的参数)
+	//链表类型还定义了splice算法,独有
+	//lst.splice(args) 或 first.splice_after(args)
+	//(p,lst2) p是一个指向lst中元素的迭代器,或是一个指向flst首前元素,函数将lst2所有元素移动到p之前or flst之后
+	//(p, lst2, p2) p2是一个指向lst2中位置的有效的迭代器,将p2指向的元素移动到lst中,或将p2之后的元素移动到flst中,lst2可以与lst相同list
+	//(p, lst2, b, e) b和e必须表示lst2中的合法范围,将给定范围中的元素从lst2移动到lst工flst, last2与lst可以是相同的链表,但p不能指向给定范围内的元素
+
+	//注意:链表中独有的操作会改变容器
+	//而泛型算法不会改变底层的容器
+	//
+	//算法不直接改变它们所操作的序列的大小,它们会将元素从一个位置拷贝到另一个位置,但不会直接添加工删除元素
+	//但可以通过插入迭代器做到
+
+}
+
+//关联容器
+void test_associative() {
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	using std::string;
+	using std::istringstream;
+	string inputstring("");
+	istringstream sinput(inputstring);
+	//关联容器支持高效的关键字查找和访问,两个主要的关联容器类型是map和set
+	//map中的元素是一些关键字-值对
+	//关键字起到索引的作用,值则表示与索引相关联的数据
+	//set中每个元素只包含一个关键字
+	//set支持高效的关键字查询操作:检查一个给定关键字是否在set中
+	//例如,在某些文本处理过程中,可以用一个set来保存想要忽略的单词,字典则是一个很好的使用
+	//map的例子
+
+	//标准库提供8个关容器,不同
+	//1.每个容器或是一个set,或是一个map
+	//2.或者要求不重复的关键字,或允许重复的关键字
+	//3.按顺序保存元素,或无序保存
+	//允许重复关键字的容器的名字中都包含单词multi
+	//不保持关键字按顺序存储的容器的名字都以单词unordered开头
+	//因此一个unordered_multi_set是一个允许重复关键字元素无序保存的集合
+	//而一个set则是一个要求不重复关键字,有序存储的集合
+	//无序容器使用哈希函数来组织元素
+
+	//类型map和multimap定义在头文件map中,set和multiset定义在头文件set中
+	//无序容器则定义在头文件unordered_map和unoreder_set中
+	//
+	//按关键字有序保存元素
+	//map 关联数组,保存key-value
+	//set 关键字即值,即只保存关键字的容器
+	//multimap 关键字可重复出现的map
+	//multiset 关键字可重复出现的set 
+	//无序集合
+	//unordered_map 哈希函数组织的map
+	//unordered_set 哈希函数组织的set
+	//unordered_multimap 哈希组织的map,关键字可重复
+	//unordered_multiset 
+
+	//使用关联容器
+	//一个经典的使用map的例子是单词计数器
+
+	//使用map
+	//map<string, size_t> word_count;
+	//string word;
+	//while(cin>>word)
+	//   ++word_count[word];
+	//for( const auto &w : word_count) 
+	//   cout<<w.first<<" occurs "<<w.second
+	//       <<((w.second>1) ? "times" : " time"<<endl;
+	//类似顺序容器,关联容器也是模板
+	//如果一个word还未在map,下标运算[]会创建一个新元素,其关键字为word,值为0
+	//当从map中提取一个元素时,会得到一个pair类型的对象
+	//pair是一个模板类型,保存两个名为first和second的(public)数据成员
+	//
+
+	//使用set
+	//set<string> exclude = {"the", "a", "or"};
+	//if(exclude.find(word)==exclude.end())
+	//
+
+	//关联容器概述
+	//关联容器不支持顺序容器的位置相关的操作,例如push_front或push_back
+	//关联容器的迭代器都是双向的
+
+	//定义关联容器
+	//每个关联容器都定义了默认的构造函数,创建一个指定类型的空容器,也可初始化为另一个同类型
+	//容器的拷贝,或是从一个值范围来初始化关联容器,只要值能转化
+	//在新标准下,也可以对关联容器进行值初始化 c++ 11
+	//当初始化一个map时,必须提供关键字类型和值类型,将每个关键字-值对包围在花括号中
+	//{key,value}
+
+	//初始化multimap或multiset
+	//一个map和set中的关键字必须是唯一的,multi版本没有限制
+	using std::vector;
+	using std::set;
+	using std::multiset;
+	vector<int> ivec;
+	for (vector<int>::size_type i = 0; i != 10; ++i) {
+		ivec.push_back(i);
+		ivec.push_back(i);
+	}
+	//
+	set<int> iset(ivec.cbegin(), ivec.cend());
+	multiset<int> miset(ivec.cbegin(), ivec.cend());
+	cout << ivec.size() << endl;
+	cout << iset.size() << endl;
+	PRINT_C(iset);
+	cout << miset.size() << endl;
+	PRINT_C(miset);
+
+	//关键字类型的要求
+	//关联容器对其关键字类型有一些限制
+	//对于有序容器:map multimap set multiset
+	//关键字类型必须定义比较的方法,默认情况下使用关键字类型的<运算符来比较两个关键字
+	//在集合类型中,关键字就是元素类型,在映射类型中,关键字类型是元素的第一部分的类型
+	//
+	//有序容器的关键字类型
+	//可以向一个算法提供我们自己定义的比较操作,与之类似,也可提供自己的操作来代替关键字上的<
+	//运算符,所提供的操作必须在关键字类型上定义一个严格弱序,可以将其看作"小于等于"
+	//虽然实际定义的操作可能是一个复杂的函数,无论我们怎样定义比较函数,它必须具备如下基本性质
+	//1.两个关键字不能同时"小于等于"对方
+	//2.k1"<="k2 k2"<="k3 则 k1"<="k3
+	//3.如果存在两个关键字,任何一个都不"<="另一个,那么说这两个关键字是等价的,同样应当有传递性
+
+	//使用关键字类型的比较函数
+	//为了使用自定义的操作,在定义multiset时必须提供两个类型,关键字类型
+	//和比较操作类型--应该是一种函数指针类型
+	//multiset<Bangumi_Data,decltype(compareBD)*>
+	//		bangumi_set(compareBD);
+	//同时使用函数名来初始化对象,也可用&compareBD实参代替,因为默认会将函数名转换为指针类型
+
+	//pair类型
+	//它定义在头文件utility中
+	//一个pair保存两个数据成员,类似容器
+	std::pair<string, string> anon;
+	std::pair<int, string > sfdfsfad{1,"xxx"};
+	//pair的默认构造函数对数据成员进行初始化
+	//与其他的标准库类型不同,pair的数据成员是public的,两个成员分别命名为first和second
+	//用普通成员访问符号访问它们
+	//
+	//pair的操作
+	//pair<T1, T2> p;
+	//pair<T1, T2> p(v1, v2);
+	//pair<T1, T2> p = {v1,v2};
+	//make_pair(v1,v2);  返回一个用v1 v2初始化的pair,类型从v1,v2的类型中推断
+	//p.first  返回p的名为first的公有数据成员
+	//p.second 返回p的名为second的公有数据成员
+	//p1 relop p2  关系运算符按字典序的定义:例如,当p1.first<p2.first 或 !(p2.first < p1.first)&&p1.second<p2.second
+	//成立时,p1 <p2为true
+	//p1 == p2
+	//p1 != p2
+
+	//创建一个函数需要返回一个pair,在新的标准下,可以对返回值 进行列表初始化
+	//return {v.back(), v.back().size()}; //较早的c++不支持只用一个花括号,必须下面的
+	//return pair<string, int>();
+	//也可使用make_pair()函数return一个pair对象
+
+	//关联容器操作
 }
 int main() {
 	//输入输出
@@ -2679,7 +3055,10 @@ int main() {
 	//test_array_assign();
 	//test_seq_container();
 	//test_adaptor();
-	test_algorithm();
+	//test_algorithm();
+	//test_iterator();
+	//test_algorithm_struct();
+	test_associative();
 	system("pause");
 	return 0;
 }
