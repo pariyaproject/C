@@ -16,6 +16,9 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <memory>
 //包含来自标准库的头文件时使用<>否则""
 //class
 #include "bangumi_subject.h"
@@ -2822,7 +2825,7 @@ void test_algorithm_struct() {
 	//remove_copy_if(v1.begin(), v1.end(), back_inserter(v2),
 	//				[](int i) {return i%2;}); //将偶数元素从v1拷贝到v2,v1不变
 
-	
+
 	//特定容器算法
 	//与其他容器不同链表类型list和forward_list定义了几个成员函数形式的算法
 	//特别的 它们定义了独有的sort, merge, remove, reverse和 unique
@@ -2972,7 +2975,7 @@ void test_associative() {
 	//它定义在头文件utility中
 	//一个pair保存两个数据成员,类似容器
 	std::pair<string, string> anon;
-	std::pair<int, string > sfdfsfad{1,"xxx"};
+	std::pair<int, string > sfdfsfad{ 1,"xxx" };
 	//pair的默认构造函数对数据成员进行初始化
 	//与其他的标准库类型不同,pair的数据成员是public的,两个成员分别命名为first和second
 	//用普通成员访问符号访问它们
@@ -2995,6 +2998,318 @@ void test_associative() {
 	//也可使用make_pair()函数return一个pair对象
 
 	//关联容器操作
+	//key_type 此容器类型的关键字类型
+	//mapped_type 每个关键字关联的类型:只适用于map
+	//value_type 对于set,与key_type相同 / 对于map为 Pair<const key_type, mapped_type>
+	//注意pair的第一个类型是const
+
+	//关联容器迭代器
+	//当解引用一个关联迭代器时,得到一个类型为容器的value_type的值的引用.注意不能更改Pair的第一个数据(关键字)(const)
+	//map => pair类型  set => key_type类型
+	//set的迭代器是const的,虽然set类型定义了iterator和const_iterator类型,但两种类型都只允许访问set中的元素
+	//与不能改变一个map元素的关键字一样,set中的关键字也是const
+
+	//遍历关联容器,两个容器支持begin和end操作
+
+	//关联容器和算法
+	//通常不对关联容器使用泛型算法,比如find算法,有自带的效率远高于泛型算法(顺序搜索)
+	//一般使用用作一个目标位置,源序列 例如拷贝一个关联容器
+	//类似地可以用inserter将一个插入器绑定到一个关联容器
+
+	//添加元素
+	//关联容器的insert成员,向容器中添加一个元素或一个元素范围 
+	//由于map和set不包含重复的关键字,因此插入一个已存在的元素对容器没有影响
+	vector<int> ivec10 = { 2,4,6,8,2,4,6,8 };
+	set<int> seti10;
+	seti10.insert(ivec10.cbegin(), ivec10.cend()); //有4个元素 2 4 6 8
+	seti10.insert({ 1,3,5,7,1,3,5,7 }); //有8个元素 1 2 3 4 5 6 7 8
+	using std::ostream_iterator;
+	ostream_iterator<int> oiter(cout, " ");
+	for (auto i = seti10.cbegin(); i != seti10.cend(); ++i) {
+		oiter=*i;
+	}
+	cout << endl; //注意:关联容器也是支持迭代器的,也可通过迭代器遍历
+	//cout << "Test Print_c:\n";
+	//PRINT_C(seti10);
+	//向map添加
+	//对一个map进行insert,记住一个map的元素是pair类型
+	//向map插入元素的四种方法
+	//m.insert({word,1});
+	//m.insert(make_pair(word,1));
+	//m.insert(pair<string,size_t>(word,1));
+	//m.insert(map<string,size_t>::value_type(word,1));
+
+	//关联容器的insert操作
+	//m.insert(v)  v是value_type类型的对象:args用来构造一个元素
+	//m.emplace(args)  只有当元素的关键字不在m中都会插入(构造)元素,返回一个pair包含一个迭代器
+	//					指向具有指定关键字的元素,以及一个指示插入是否成功的bool值
+	//					对于multimap和multiset总会插入(构造)给定元素,并返回一个指向新元素的迭代器
+	//m.insert(b, e)   be是迭代器,表示一个m::value_type类型值 的范围
+	//m.insert(i1)   il是这种值的花括号列表,返回void
+	//m.insert(p, v)  与单一参数类似,只是指定了p迭代器位置的插入,返回一个迭代器,指向具有给定关键字
+	//m.emplace(p, args)   的元素
+
+	//向multimap,multiset添加元素
+	//接受单个元素的insert操作返回一个指向新元素的迭代器,无须返回一个bool值
+
+	//删除元素
+	//关联容器定义了三个版本的erase
+	//与顺序容器相似,可以通过给erase一个迭代器或一个迭代器对来删除一个元素或一个元素范围,返回void
+	//关联容器提供一个额外的erase操作
+	//它接受一个key_type参数,此版本删除所有匹配给定关键字的元素(如果存在的话)
+	//返回实际删除的元素的数量
+
+	//c.erase(k)  从c中删除每个关键字为k的元素,返回一个size_type值,指出删除的元素的数量
+	//c.erase(p)  删除迭代器p指定的元素,返回指向p之后的元素,尾元素删除返回尾后元素c.cend()
+	//c.erase(b, e)  删除迭代器对b和e所表示的范围中的元素,返回e
+
+	//map的下标操作
+	//map和unordered_map提供了下标运算符和一个对应的at函数
+	//set类型不支持下标,不能对multimap等进行下标,因为可以一对多
+	//但是注意如果下标接受的关键字不在map中,会为它创建一个元素并插入到map中
+	//关联值将进行值初始化
+	//由于关联容器可能插入一个新的元素,我们只可以对非const的map使用下标操作
+	//word_count["Anna"] = 1;
+	//1.在word_count中搜索关键字为Anna的元素
+	//2.将新的关键字-值插入到word_count中,关键字是一个const string,保存Anna
+	//值进行值初始化
+	//3.提取出新插入的元素,将值赋予它
+
+	//c[k]  返回关键字为k的元素(不是迭代器)如果k不在,添加一个关键字为k的元素,对其进行值初始化
+	//c.at(k)   访问关键字为k的元素,带参数检查;k不在c中,抛出一个out_of_range的异常
+
+	//与vector和string 不同 ,map的下标运算符返回的类型与解引用map迭代器得到的类型不同
+	//
+	//访问元素
+	//关联容器提供多种查找一个指定元素的方法,
+	//如果只关心一个特定元素是否已在容器中,可能find是最佳选择,对于不允许重复关键字的容器,使用
+	//find和count没什么区别,但对于允许重复关键字的容器,count不会做更多的工作,如果元素在容器中
+	//不会统计有多少个元素有相同的关键字,否则最好使用find
+	set<int> iset11 = { 0,1,2,3,4 };
+	iset11.find(1);	//返回一个迭代器,指向key==1的元素
+	iset11.find(11);	//返回一个迭代器,其值等于iset.end()
+	iset11.count(1);	//返回1
+	iset11.count(11);	//返回0
+	//lower_bound和upper_bound不适用于无序容器
+	//下标和at操作只适用于非const的map和unordered_map
+	//c.find(k) 返回一个迭代器 ,指向关键字为k的元素,若k不在容器中,返回尾后元素
+	//c.count(k) 返回关键字等于k的元素的数量 
+	//c.lower_bound(k)  返回一个迭代器,指向第一个关键字不小于k的元素 否则返回一个不影响排序关键字插入位置
+	//c.upper_bound(k)  返回一个迭代器,指向第一个关键字大于k的元素 否则返回一个不影响排序关键字插入位置
+	//c.equal_range(k)  返回一个迭代器pair,表示关键字等于k的元素的范围,若k不存在,pair的两个成员均等于c.end()
+
+	//在map中通过使用find和count可以遍历相同关键字的所有元素
+	//auto times = c.cout("x");
+	//auto iter = c.find("x");
+	//while(times){ ;++iter;--times}
+
+	//以上还可以使用lower_bound和uupper_bound来实现
+	//for( auto beg = c.lower_bound(1),
+	//		end = c.upper_bound(1);
+	//		beg != end; ++beg)
+	//   ;
+	//如果不存在1,lower_bound可能返回第一个大于1的元素,也可能是尾后迭代器
+
+	//equal_range函数
+	//最直接的解决方法
+	//for(auto pos = c.equal_range(1);pos.first!=pos.second;++pos.first)
+	//;
+	//
+
+	//单词转换的map p392
+	//
+
+}
+
+//无序容器
+void test_unordered_container() {
+	//c++11 定义了4个无序关联容器
+	//这些容器不是使用比较运算来组织元素的
+	//而是使用一个哈希函数和关键字类型的==运算符
+	//在关键字类型的元素没有明显的序关系的情况下,无序容器是非常有用的
+	//在某些应用中维护元素的序代价非常高昂,此时无序容器有用
+
+	//除了哈希管理之外,无序容器还提供了与有序容器相同的操作(find,insert等)
+	//因此通常可以用一个无序容器替换对应的有序容器,反之亦然,但是由于元素未按顺序存储,
+	//一个使用无序容器的程序的输出(通常)会与使用有序容器的版本不同(FIFO)
+	
+	//管理桶
+	//无序容器在存储上组织为一组桶,每个桶保存0个或多个元素,无序容器使用一个哈希函数将元素映射到
+	//桶,为了访问一个元素,容器首先计算元素的哈希值,它指出应该搜索哪个桶,容器将具有一个特定哈希值
+	//的元素都保存在相同的桶中,如果容器允许重复关键字,所有具有相同关键字的元素也都会在同一个桶中
+	//因此,无序容器的性能依赖于哈希函数的质量和大小
+	//对于相同的参数,哈希函数必须总是产生相同的结果,当一个桶保存多个元素时,需要顺序搜索这些元素
+	//来查找想要的那个,通常哈希和在桶中搜索很快,但保存多个元素会...
+
+	//无序容器提供了一组管理桶的函数
+	//桶接口
+	//c.bucket_count()  //正在使用的桶的数目
+	//c.max_bucket_count()  //容器能容纳的最多的桶的数量
+	//c.bucket_size(n)   //第n个桶中有多少元素
+	//c.bucket(k)    //关键字为k的元素在哪个桶中
+	//桶迭代
+	//local_iterator  //可以用来访问桶中元素的迭代器类型
+	//const_local_iterator  //桶迭代器的const版本
+	//c.begin(n), c.end(n)  //桶n的首元素迭代器和尾后迭代器
+	//c.cbegin(n), c.cend(n)  //返回const_local_iterator
+	//哈希策略
+	//c.local_factor()  //每个桶的平均元素数量,返回float值
+	//c.max_load_factor()  //c试图维护的平均桶大小,返回float值,c会在需要时添加新的桶,使得load_factor<=max_load_factor
+	//c.rehash(n)  //重组存储,使得bucket_count>=n且bucket_count>size/max_load_facotor
+	//c.reserve(n) //重组存储,使得c可以保存n个元素且不必rehash
+
+	//无序容器对关键字类型的要求
+	//默认情况下,无序容器使用关键字类型的==运算符来比较元素,还使用一个
+	//hash<key_type>类型的对象来生成每个元素的哈希值
+	//标准库为内置类型(包括指针)提供了hash模板,还为一些标准库类型,包括string
+	//和智能指针类型定义了hash,因此可以直接定义关键字是内置类型(包括指针类型)string还是智能指针的
+	//无序容器
+
+	//不能直接定义关键字类型为自定义类类型的无序容器,与容器不同,不能直接使用哈希模板
+	//而必须提供自己的hash模板版本
+	//定义一个重载函数
+	//using hasher = 
+#define hasher(bs)	[](const Bangumi_subject&bs) {return std::hash<int>()(bs.Id());}
+	typedef size_t(*hash_type)(const Bangumi_subject&);
+#define eqOp(lhs,rhs)  [](const Bangumi_subject&lhs,const Bangumi_subject &rhs)\
+{return lhs.Id() == rhs.Id();}
+	typedef bool(*eqOp_type)(const Bangumi_subject&lhs, const Bangumi_subject &rhs);
+
+	using BS_multiset = std::unordered_multiset<Bangumi_subject, hash_type, eqOp_type>;
+	
+	//参数是桶的大小,哈希函数指针和相等性判断运算符指针
+	BS_multiset bangumi(42, [](const Bangumi_subject&bs) {return std::hash<int>()(bs.Id()); },
+		[](const Bangumi_subject&lhs, const Bangumi_subject &rhs)
+	{return lhs.Id() == rhs.Id(); });
+
+	//如果类已经定义了==运算符,则可以只重载哈希函数
+	
+	//关联容器支持通过关键字高效查找和提取元素,对关键字的使用将关联容器和顺序容器区分开来
+	//顺序容器中是通过位置访问元素的
+	//标准库定义了8个关联容器
+	//有序容器使用比较函数来比较关键字,默认情况下,比较操作是使用<运算符
+	//无序容器使用关键字类型的==运算符和一个hash<key_type)类型的对象来组织元素
+
+}
+//动态内存
+void test_dyn_mem() {
+	//除了自动和static对象外,c++还支持动态分配对象
+	//动态分配的对象的生存期与它们在哪里创建是无关的
+	//只有当显式地被释放时,这些对象才会销毁
+	//为了更安全地使用动态对象,标准库定义了两个智能类型来管理动态分配的对象
+	//当一个对象应该被释放时,指向它的智能指针可以确保自动地释放它
+
+	//静态内存用来保存局部static对象,类static数据成员以及定义在任何函数之外的变量
+	//栈内存用来保存定义在函数内 的非static对象,分配在静态或栈内存中的对象 由编译器自动创建和销毁
+	//static对象在使用之前分配,在程序结束时销毁
+
+	//除了静态内存和栈内存,每个程序还拥有一个内存池,这部分内存被称作自由空间(free store)或堆(heap)
+	//程序用堆来动态分配的对象,即那些在程序运行时分配的对象,动态对象的生存期由程序来控制
+	//也就是说当动态对象不再使用时,代码必须显式地销毁
+
+	//动态内存与智能指针
+	//在c++中 动态内存的管理是通过一对运算符来完成的:
+	//new:在动态内存中为对象分配空间并返回一个指向该对象的指针,可以选择对对象进行初始化
+	//delete:接受一个动态对象的指针,销毁该对象,并释放与之关联的内存
+	//
+
+	//c++11
+	//新标准库提供两种智能指针类型来管理动态对象
+	//智能指针的行为类似常规指针,重要的区别是它负责自动释放所指向的对象
+	//两种智能指针的区别在于管理底层指针的方式;
+	//shared_ptr允许多个指针指向同一个对象
+	//unique_ptr则独占所指向的对象
+	//标准库还定义了一个名为weak_ptr的伴随类,它是一种弱引用,指向shared_ptr所管理的
+	//对象,这三种类型都定义在memory头文件中
+
+	//shared_ptr类
+	//类似vector,智能指针也是模板(提供额外的信息)
+	//
+	using std::string;
+	using std::cout;
+	using std::cin;
+	using std::endl;
+	std::shared_ptr<string> p1;
+	//默认初始化的智能指针中保存一个空指针
+	//如果一个条件判断中使用智能指针,效果就是检测它是否为空
+	//检查p1是否为空,如果不为空,检查昰否指向一个空string
+	if (p1 && p1->empty()) {
+		;
+	}
+
+	//shared_ptr和unique_ptr公共支持的操作
+	//shared_ptr<T> sp  //空智能指针,可以指向类型为T的对象
+	//unique_ptr<T> up  //
+	//p  //将p用做一个条件判断,若p指向一个对象,则为true
+	//*p  //解引用p,获得它指向的对象
+	//p->mem  //等价于(*p).mem
+	//p.get()  //返回p中保存的指针,要小心使用,若智能指针释放了其对象,返回的指针所指的对象也就消失
+	//swap(q,p)  //交换p和q中的指针
+	//p.swap(q)  
+
+
+	//shared_ptr独有的操作
+	//make_shared<T>(args) //返回一个shared_ptr,指向一个动态分配的类型为T的对象,使用args初始化此对象
+	//shared_ptr<T>p(q) //p是shared_ptr的拷贝:此操作会递增q中的计数器.q中的指针必须能转换为T*
+	//p = q  //p和q都是shared_ptr,所保存的指针必须能相互转换,此操作会递减p的引用次数,递增q的引用计数
+	//			//若p的引用计数变为0,则将其管理的原内存释放
+	//p.unique()  //若p.use_count()为1,返回true;否则返回false
+	//p.use_count()  //返回与p共享对象的智能指针数量(可能慢:用于调试)
+
+	//make_shared函数 
+	//最安全的分配和使用动态内存的方法是调用make_shared
+	//此函数在动态内存中分配一个对象并初始化它,返回指向此对象的shared_ptr(定义在memory)
+	//使用时需要指定要创建的对象的类型,定义方式与模板类相同
+	//make_shared()类似顺序容器的emplace成员,它用参数来构造给定类型的对象,args与元素的某个构造函数匹配
+	//如果不传递任何参数,对象就会进行值初始化
+
+	//注意即使在函数内make_shared  int也不会未定义,这里初始化0
+	std::shared_ptr<int> test_int_sp = std::make_shared<int>();
+	cout << *test_int_sp << endl;
+	
+	//shared_ptr的拷贝和赋值
+	//当进行拷贝或赋值操作时,每个shared_ptr都会记录有多少个其他shared_ptr指向相同的对象
+	//auto p = make_shared<int>(42); //p指向的对象只有p一个引用者
+	//auto q(p);  //p和q指向相同对象,此对象有两个引用者
+	//可以认为每个shared_ptr都有一个关联的计数器,通常称其为引用计数count,无论何时
+	//拷贝一个shared_ptr,计数器都会递增,例如,当用一个shared_ptr初始化另一个shared_ptr
+	//或将它作为参数传递给一个函数以及作为函数的返回值时,它所关联的计数器就会递增,当给shared_ptr
+	//赋予一个新值或是shared_ptr被销毁(例如一个局部的shared_ptr离开其作用域),计数器会递减
+	//一旦一个shared_ptr的计数器变为0,就会自动释放自己所管理的对象
+	auto sfs = std::make_shared<int>(3);//r是3的唯一引用者
+	sfs = test_int_sp;//给sfs赋值
+	//递增q指向的对象的引用计数
+	//递减r原来指向对象的引用计数
+	//r原来指向的对象已经没有引用者,会自动被释放
+
+	//shared_ptr自动销毁所管理的对象
+	//当指向一个对象的最后一个shared_ptr被销毁时,shared_ptr类会自动销毁此对象,
+	//它是通过另外特殊的成员函数--析构函数完成销毁工作的,类似于构造函数,每个类都有一个析构函数
+	//就像构造函数控制初始化一样,析构函数控制此类型的对象销毁时做什么操作
+	//析构函数一般用来释放对象所分配的资源,
+	//shared_ptr的析构函数会递减它所指向的对象的引用计数,如果引用计数变为0,shared_ptr的析构函数会销毁对象
+	//并释放它占用的内存
+
+	//shared_ptr还会自动释放相关联的内存,当动态对象不再被使用时,shared_ptr会自动释放动态对象
+	//这个特性使得动态内存的使用变得非常容易,例如可能有一个函数,它返回一个shared_ptr,
+	//指向一个Foo类型的动态分配对象,对象是通过一个类型为T的参数进行初始化的
+	//另外一个函数中调用该函数拷贝生成了一个局部变量shared_ptr,并且函数没有返回这个,函数结束后则这个对象本身也释放
+	//其原理与上面一样(本质还是引用计数的好)
+
+	//总之没有任何引用的指针存在,内存就会被释放
+
+	//share_ptr在无用之后仍然保留的一种可能情况是:将shared_ptr放在一个容器中,
+	//随后重排了容器,从而不再需要某些元素,这种情况下,应该确保用erase删除那些不再需要的shared_ptr元素
+
+	//使用了动态生存期的资源的类
+	//1.程序不知要使用多少对象
+	//2.程序不知所需对象的准确类型
+	//3.程序需要在多个对象间共享数据
+
+	//容器类原因是1
+	
+
+
 }
 int main() {
 	//输入输出
@@ -3058,7 +3373,9 @@ int main() {
 	//test_algorithm();
 	//test_iterator();
 	//test_algorithm_struct();
-	test_associative();
+	//test_associative();
+	//test_unordered_container();
+	test_dyn_mem();{}
 	system("pause");
 	return 0;
 }
