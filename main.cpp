@@ -3026,7 +3026,7 @@ void test_associative() {
 	using std::ostream_iterator;
 	ostream_iterator<int> oiter(cout, " ");
 	for (auto i = seti10.cbegin(); i != seti10.cend(); ++i) {
-		oiter=*i;
+		oiter = *i;
 	}
 	cout << endl; //注意:关联容器也是支持迭代器的,也可通过迭代器遍历
 	//cout << "Test Print_c:\n";
@@ -3132,7 +3132,7 @@ void test_unordered_container() {
 	//除了哈希管理之外,无序容器还提供了与有序容器相同的操作(find,insert等)
 	//因此通常可以用一个无序容器替换对应的有序容器,反之亦然,但是由于元素未按顺序存储,
 	//一个使用无序容器的程序的输出(通常)会与使用有序容器的版本不同(FIFO)
-	
+
 	//管理桶
 	//无序容器在存储上组织为一组桶,每个桶保存0个或多个元素,无序容器使用一个哈希函数将元素映射到
 	//桶,为了访问一个元素,容器首先计算元素的哈希值,它指出应该搜索哪个桶,容器将具有一个特定哈希值
@@ -3176,14 +3176,14 @@ void test_unordered_container() {
 	typedef bool(*eqOp_type)(const Bangumi_subject&lhs, const Bangumi_subject &rhs);
 
 	using BS_multiset = std::unordered_multiset<Bangumi_subject, hash_type, eqOp_type>;
-	
+
 	//参数是桶的大小,哈希函数指针和相等性判断运算符指针
 	BS_multiset bangumi(42, [](const Bangumi_subject&bs) {return std::hash<int>()(bs.Id()); },
 		[](const Bangumi_subject&lhs, const Bangumi_subject &rhs)
 	{return lhs.Id() == rhs.Id(); });
 
 	//如果类已经定义了==运算符,则可以只重载哈希函数
-	
+
 	//关联容器支持通过关键字高效查找和提取元素,对关键字的使用将关联容器和顺序容器区分开来
 	//顺序容器中是通过位置访问元素的
 	//标准库定义了8个关联容器
@@ -3266,7 +3266,7 @@ void test_dyn_mem() {
 	//注意即使在函数内make_shared  int也不会未定义,这里初始化0
 	std::shared_ptr<int> test_int_sp = std::make_shared<int>();
 	cout << *test_int_sp << endl;
-	
+
 	//shared_ptr的拷贝和赋值
 	//当进行拷贝或赋值操作时,每个shared_ptr都会记录有多少个其他shared_ptr指向相同的对象
 	//auto p = make_shared<int>(42); //p指向的对象只有p一个引用者
@@ -3277,7 +3277,8 @@ void test_dyn_mem() {
 	//赋予一个新值或是shared_ptr被销毁(例如一个局部的shared_ptr离开其作用域),计数器会递减
 	//一旦一个shared_ptr的计数器变为0,就会自动释放自己所管理的对象
 	auto sfs = std::make_shared<int>(3);//r是3的唯一引用者
-	sfs = test_int_sp;//给sfs赋值
+	sfs = test_int_sp;
+	//给sfs赋值
 	//递增q指向的对象的引用计数
 	//递减r原来指向对象的引用计数
 	//r原来指向的对象已经没有引用者,会自动被释放
@@ -3306,10 +3307,298 @@ void test_dyn_mem() {
 	//2.程序不知所需对象的准确类型
 	//3.程序需要在多个对象间共享数据
 
-	//容器类原因是1
+	//容器类原因是1使用的动态内存
+	//目前为止,使用过的类中,分配的资源都与对应对象的生存期一致
+	//每个vector拥有自己的元素,当拷贝一个vector时,原vector和副本vector中的元素相互分离
+	//但某些类分配的资源具有与原对象相独立的生存期,拥有共享的元素
+	//一个对象如果有想要共享的内容,应当使用内存池创建内容防止对象被析构时内容被回收,信息丢失
+	//p406
+
+	//直接管理内存
+	//c++定义了两个运算符来分配和释放动态内存,运算符new分配内存,delete释放new分配的内存
+	//相对于智能指针,容易出错
+	//在自由空间分配的内存是无名的,因此new无法为其分配的对象命名,而是返回一个指向对象的指针
+	//int *p = new int;
+	//默认下,动态分配的对象是默认初始化的,这意味内置类型或组合类型的对象的值将是未定义的
+	//而类类型对象将使用默认构造函数进行初始化
+	//可以使用直接初始化方式 int *p = new int(1024);
+	//可以使用传统的构造方式 string *ps = new string(10, '9');
+	//可以使用列表初始化(花括号) vector<int> *pv = new vector<int>{0,1,2,3};
+
+	//也可对动态分配的对象进行值初始化,只需在类型名之后跟一对空括号
+	//stirng *ps1 = new string; //默认初始化空string
+	//string *ps = new string();  //值初始化为空
+	//int *pi1 = new int;  //默认初始化:*pi1的值未定义
+	//int *pi2 = new int(); //值初始化为0; *pi2为0
+	//对于定义了自己的构造函数的类类型(例如string)来说,要求值初始化是没有意义的
+	//不管采用什么形式,对象都会通过默认构造函数来初始化
+	//但对于内置类型,两种形式不同;值初始化的内置类型对象有良好定义的值
+	//而默认初始化的对象的值是未定义的,在类中没有值初始化的内置类型也会未定义
+
+	//c++ 11
+	//如果使用了{}初始化器(类型必须一样),就可以使用auto
+	//但是由于编译器要用初始化器的类型来推断要分配的类型,只有当括号中仅有单一初始化器才可以使用auto
+	//auto p1 = new auto(obj); p指向一个与obj类型相同的对象,对象调用obj初始化
+	//auto p2 = new auto{a,b,c}; //错误:括号中只能有单个初始化器
+
+
+	//动态分配的const对象
+	//用new分配const对象是合法的
+	//const int *pci = new const int (1024);
+	//const string *pcs = new const string;
+	//因为是const对象,必须进行初始化,除非有默认构造函数可以隐式初始化,new返回的指针是指向const的指针
+
+	//内存耗尽
+	//一个程序如果用光了可用的内存,就会new失败,会抛出异常bad_alloc
+	//可以改变new的使用方式阻止抛出异常
+	//int *p = new int; //失败的话抛出异常bad_alloc
+	//int *p = new (nothrow) int ;  //如果失败返回一个空指针
+	//这种形式的new称为定位new,允许向new传递额外的参数,bad_alloc和nothrow都定义在new头文件
+
+	//释放动态内存
+	//不用要归还内存,通过delete表达式,接受一个指针,指向需要释放的对象
+	//delete p; //p必须指向一个动态分配的对象或一个空指针 
+	//与new类似,delete有两个操作:1.销毁指向的对象 2.释放对应的内存
+
+	//指针值和delete
+	//delete的必须指向动态分配的内存或一个空指针,如果释放一个非new分配的内存,或将一个相同的
+	//指针多次释放会产生未定义行为. 虽然const对象的值不能被改变,但可以被释放
+
+	//动态对象的生命周期直到被释放为止,由内置指针(非智能指针)管理的动态内存在被显式释放前一直会存在
+	//出错点:
+	//1.忘记delete内存,会导致内存泄漏
+	//2.使用已经释放掉的对象,通过在释放后将指针量置空可以解决
+	//3.同一块内存释放两次,比如两个指针指向相同的动态分配对象时,可能发生
+
+	//delete之后,指针本身仍存在,内容不在=>空悬指针
+
+	//shared_ptr和new结合使用
+	//shared_ptr<double>p1; //shared_ptr可以指向一个double
+	//shared_ptr<int> p2(new int (45));
+	//接受指针参数的智能指针是explicit的(只能用于直接初始化,并且不能隐式转换单一参数),因此不能将一个内置指针隐式转换为一个智能指针
+	//必须使用直接初始化形式来初始化一个智能指针 
+	//shared_ptr<int>p1 = new int (1024) //错误: 必须使用直接初始化形式(不能拷贝一个普通指针(因为阻止了隐式转换))
+	//shared_ptr<int>p (new int(1024));  //正确:使用了直接初始化形式(构造函数接受一个普通指针参数)
+	//因此不能return new int(p); 到share_ptr<int>
+	//没有一个内置指针到智能指针的隐式转换
+
+	//默认一个用来初始化智能指针的指针指向一个动态分配的内存空间,因为智能指针默认使用delete释放
+	//如果要绑定一个指向其他类型的资源的指针上.应当提供自己的delete操作
+
+	//定义和改变shared_ptr的其他方法
+	//shared_ptr<T> p(q)  //p管理内置指针q所指向的对象,q必须指向new分配的内存,且能转换为T*
+	//shared_ptr<T> p(u)  //p从unique_ptr u 接管对象的所有权,将u置为空
+	//shared_ptr<T> p(q,d)	//p接管了内置指针q的对象的所有权,p将使用可调用对象d代替delete
+	//shared_ptr<T> p(p2, d)  //p2是shared_ptr类型, p是p2的拷贝,唯一区别是使用d代替delete
+	//p.reset()	 //若p是唯一指向其对象的shared_ptr,reset会释放此对象,若传递了可选的参数内置
+	//p.reset(q)	//指针q,会令p指向q否则会将p置为空,d是使用d而不是delete释放q
+	//p.reset(q,d)  //reset减少一次引用计数
+
+	//不应当混合使用普通new指针和shared_ptr
+	//不应使用get初始化另一个智能指针或为智能指针赋值
+	//get()返回一个内置指针,指向智能指针管理的对象,是为了需要向不能使用智能指针的代码传递一个内置
+	//指针,使用get返回的指针的代码不能delete此指针(会只减少计数导致释放)
+	//p414
+
+	//reset可以将一个新的指针赋予一个shared_ptr
+	//与赋值类似,reset会更新引用计数,如果需要,会释放p指向的对象,reset经常和unique一起使用
+	//控制多个shared_ptr共享的对象,在改变底层对象之前,检查是否当前对象仅有的用户,否则在改变前
+	//制作一份新的拷贝
+
+}
+void test_smart_pointer() {
+	//智能指针和异常
+	//使用智能指针,即使程序块过早结束,智能指针也能确保在内存不再需要时将其释放
+	//正常处理或发生异常,局部的变量都会被销毁,因此不能通过delete(异常之后)释放
+	//
+	//所有标准库在内的很多c++类都定义了析构函数
+
+	//使用自己的释放操作
+	//默认情况下,shared_ptr假定它们指向的是动态内存,因此,当一个shared_ptr被销毁时
+	//默认进行delete操作
+	//假定有以下
+	//connection connect(destination*)
+	//void disconnect(connection);
+	//void f(destination &d){
+	//	connection c = coneect(&d);
+	//	//如果没有在f退出前调用 disconnect,就无法关闭c
+	//}
+
+	//void end_conneciont(connection *p){disconnect(*p);}
+	//void f(destination &d){
+	//	connection c = connect(&d);
+	//	shared_ptr<connection> p(&c, end_connection);
+	//  //当f退出(或异常)connection会被正确关闭
+	//}
+
+	//智能指针的陷阱
+	//需要坚持的一些基本规范
+	//1.不使用相同的内置指针值初始化(reset)多个智能指针
+	//2.不delete get()返回的指针
+	//3.不使用get()初始化或reset另一个智能指针
+	//4.如果使用get()返回的指针,当最后一个对应的智能指针销毁后,指针变为无效
+	//5.如果使用智能指针管理的资源不是new分配的内存,记住传递给它一个删除器
+
+	//unique_ptr
+	//一个Unique"拥有"它所指向的对象,与shared_ptr不同,某个时刻只能有一个Unique_ptr
+	//指向一个给定的对象,当unique_ptr被销毁时,它所指向的对象也被销毁
+	//与shared_ptr不同,unique_ptr没有一个类似make_shared的标准库函数
+	//当定义一个unique_ptr时,需要绑定new返回的指针,初始化方式也必须是直接初始化
+	std::unique_ptr<double> p1; //可以指向一个double的uniunique_ptr
+	//由于一个Unique拥有一个对象,因此不能普通拷贝和赋值操作
+	//unique_ptr<string> p2(p1);   //错误:不支持拷贝
+	//p3 = p2;  //错误: 不支持赋值
+	//
+	//unique_ptr的操作
+	//unique_ptr<T> u1  空
+	//unique_ptr<T,D> u2  //u2会调用D的可调用对象来释放指针
+	//unique_ptr<T,D> u(d)  //空unique_ptr,指向类型为T的对象,用类型为D的对象d代替delete
+	//u = nullptr ;  //释放u指向的对象,将u置为空
+	//u.release();  //放弃对指针的控制权,返回指针,并将U置为空
+	//u.reset();  //释放u指向的对象
+	//u.reset(q);  //如果提供了内置指针q,令u指向这个对象,否则将u置为空
+	//u.reset(nullptr);
+	//虽然不能拷贝或赋值unique_ptr,但可以通过调用release或reset将指针的所有权转移(一个u到另一个U)
+	using std::string;
+	std::unique_ptr<double> p2(p1.release());
+	std::unique_ptr<double> p3(new double(1.0));
+	//reset会释放自身指向的对象
+	p2.reset(p3.release());
+
+	//p2.release();//错误: p2不会释放内存,而且会丢失指针
+	//auto fsfsdd = p2.release(); //正确,必须记得delete(p)
+
+	//不能拷贝unique_ptr的规则有一个例外,可以拷贝或赋值一个将要被销毁的Unique_ptr
+	//常见的例子是从函数返回一个unique_ptr
+	//{return unique_ptr<int>(new int(p));}也可返回局部的变量
+	//这种情况下编译器使用一种特殊的"拷贝"
+
+	//向后兼容 auto_ptr
+	//标准库较早时包含了一个名为auto_ptr的类,具有unique_ptr的部分特性,应当弃用
+
+
+	//向Unique_ptr传递删除器
+	//与shared_ptr不同,应当在声明时提供额外的信息(删除器的类型参数)
+	//在创建或reset一个这种unique_ptr类型的对象时,必须提供一个指定类型的可调用对象(删除器)
+	//unique_ptr<objT, delT> p (new objT, fcn);
+
+	//重写连接的例子
+	//void f(destination &d){
+	//   connection c = connect(&d);
+	//	 unique_tr<connection, decltype(end_connerction)*>
+	//        p(&c,end_connection);
+	//}
+
+	//weak_ptr
+	//weak_ptr是一种不控制所指向对象生存期的智能指针,它指向由一个shared_ptr管理的对象
+	//.将一个weak_ptr绑定到一个shared_ptr不会改变shared_ptr的引用计数,一旦最后一个
+	//指向对象的shared_ptr被销毁,对象就会被释放,即使有weak_ptr指向对象,对象也还会被释放
+	//因此,weak_ptr的名字抓住了这种智能指针"弱"共享对象的特点
+
+	//weak_ptr
+	//weak_ptr<T> w //空weak_ptr可以指向类型为T的对象
+	//weak_ptr<T> w(sp)  //与shared_ptr sp指向相同对象的weak_ptr,T必须能转换为sp指向的类型
+	//w = p    //p可以是一个shared_ptr or weak_ptr,赋值后w与p共享对象
+	//w.reset()  //将w置为空
+	//w.use_count()  //与w共享的对象的shared_ptr的数量
+	//w.expired()   //若use_count()为0,返回true,否则返回false
+	//w.lock()  //如果expired为true,返回一个空shared_ptr;否则返回一个指向w的对象的shared_pt
+
+	//当创建一个weak_ptr时,要用一个shared_ptr来初始化
+	auto dfsf = std::make_shared<int>(42);
+	std::weak_ptr<int> sfdfsf = dfsf;  //dfsf的引用计数并没有改变
+
+	//由于对象可能不存在,不能使用weak_ptr直接访问对象,而必须调用lock,此函数检查
+	//weak_ptr指向的对象是否仍存在,如果存在lock返回一个指向共享对象的shared_ptr
+	//只要此shared_ptr存在,它所指向的底层对象也就会一直存在
+	if (std::shared_ptr<int> np = sfdfsf.lock());
+	//这句只有当lock调用返回true
 	
+	//检查指针类
+	//指针操作
+	//weak_ptr可以解决循环引用
 
+}
 
+void test_dyn_array() {
+	//动态数组
+	//c++提供了两种一次分配一个对象数组的方法
+	//定义了另一种new表达式语法:可以分配并初始化一个对象数组
+	//标准库中包含一个名为allocator的类: 允许将分配和初始化分离
+	//使用allocator通常会提供更好的性能和更灵活的内存管理能力
+	//使用容器更为简单
+
+	//new和数组
+	//为了让new分配一个对象数组,要在类型的后面跟上一对方括号,在其中指明要分配的对象的数目
+	//int *pia = new int[get_size()]; //调用函数确定大小
+	//数目可以不是常量,但要是整数
+
+	//也可用typedef int arrT[42]; int *p = new arrT;
+
+	//分配一个数组会得到一个元素类型的指针
+	//实际上分配的并不是一个数组类型,因此不能对其调用begin或end
+
+	//初始化动态分配对象的数组 
+	//默认初始化 Int = > 0
+	//新标准中,还可以提供一个元素初始化器的花括号列表
+	//int *pia = new int[4]{0,12,2,5};
+	//不足的使用默认初始化
+	//如果大于元素数目,则new表达式失败,不会分配的任何内存,抛出bad_array_new_length,定义在new头文件中
+	//动态分配一个空数组是合法的,调用 new int[0]是合法的
+	//char arr[0]; //错误
+	//char *cp = new char[0]; //正确,不能解引用
+
+	//释放动态数组 
+	//使用delete 在指针前加上一个空方括号
+	//delete p;  //释放一个对象
+	//delete []pa;	//释放一个数组  其中元素按逆序销毁
+	//注意:使用typedef的时候new时不需要加[],但delete时一定加上[]
+
+	//智能指针和动态数组
+	//[注意:要明确数组可以转换为指针,因此完全可以将智能指针看作是数组的别名]
+	//标准库提供了一个可以管理new分配的数组的unique_ptr版本
+	//为了用一个unique_ptr管理动态数组,必须在对象类型后面跟一对方括号
+	std::unique_ptr<int[]> up(new int[10]);
+
+	//这个版本的unique_ptr操作有不同
+	//当一个unique_ptr指向一个数组时,不能使用点和箭头成员运算
+	//可以这样访问元素
+	for (size_t i = 0; i != 10; ++i) {
+		up[i] = i;
+	}
+	up.release(); //自动用delete[]销毁其指针
+	//由于up指向一个数组,当up销毁它管理的指针时会自动使用delete[] ...
+
+	//shared_ptr不直接支持管理动态数组,如果希望应该提供自己定义的删除器
+	//注意是<int>不是<int*> [shared_ptr已经说明了指针 *]
+	std::shared_ptr<int> test_s_n(new int[5], [](int *p) {delete[]p; });
+	//不过使用shared_ptr遍历就会相对麻烦
+	for (size_t i = 0; i != 5; ++i)
+	{
+		*(test_s_n.get() + i) = i;
+	}
+	test_s_n.reset();
+		
+
+	//allocator类
+	//new有一些灵活上的局限,其中一方面表现在它将内存分配和对象构造组合在一起
+	//类似,delete将对象析构和内存释放组合在一块
+	//当分配一大块内存时,通常计划在这块内存上按需构造对象,但只在真正需要时才真正
+	//执行对象创建操作
+	//一般情况下,将内在分配和对象构造组合在一起可能会导致不必要的浪费
+	//
+	//allocator类
+	//标准库allocator类定义在头文件memory中
+	//它提供一种类型感知的内存分配方法,它分配的内存是原始的,未构造的
+	//
+	//allocator<T> a  //定义了一个名为a的allocator对象,可以为类型为T的对象分配内存
+	//a.allocate(n)  //分配一段原始的,未构造的内存,保存n个T对象
+	//a.deallocate(p,n)  //释放从T*指针p中地址开始的内存,这块内存保存了n个类型为T的对象
+	//						//p必须是一个先前由allocate返回的指针,且n必须是p创建时要求的大小
+	//					//在调用deallocate之前,用户必须对每个在这块内存中创建的对象调用destroy
+	//a.construct(p, args) //p必须是一个类型为T*的指针,指向一块原始内存:arg被传递给类型为
+	//					//T的构造函数,用来在p指向的内存中构造一个对象
+	//a.destroy(p)  //P是T*类型的指针,此算法对p指向的对象执行析构函数
 }
 int main() {
 	//输入输出
@@ -3375,7 +3664,9 @@ int main() {
 	//test_algorithm_struct();
 	//test_associative();
 	//test_unordered_container();
-	test_dyn_mem();{}
+	//test_dyn_mem();
+	//test_smart_pointer();
+	test_dyn_array();
 	system("pause");
 	return 0;
 }
