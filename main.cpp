@@ -25,6 +25,7 @@
 #include "Test_class.h"
 //extern const int x ;
 //输入输出
+
 void cin_cout_cerr_clog() {
 	//cerr clog 和 cout 都会输出在同一个窗口
 	std::cerr << "err" << std::endl;
@@ -3513,7 +3514,7 @@ void test_smart_pointer() {
 	//只要此shared_ptr存在,它所指向的底层对象也就会一直存在
 	if (std::shared_ptr<int> np = sfdfsf.lock());
 	//这句只有当lock调用返回true
-	
+
 	//检查指针类
 	//指针操作
 	//weak_ptr可以解决循环引用
@@ -3578,7 +3579,7 @@ void test_dyn_array() {
 		*(test_s_n.get() + i) = i;
 	}
 	test_s_n.reset();
-		
+
 
 	//allocator类
 	//new有一些灵活上的局限,其中一方面表现在它将内存分配和对象构造组合在一起
@@ -3599,7 +3600,56 @@ void test_dyn_array() {
 	//a.construct(p, args) //p必须是一个类型为T*的指针,指向一块原始内存:arg被传递给类型为
 	//					//T的构造函数,用来在p指向的内存中构造一个对象
 	//a.destroy(p)  //P是T*类型的指针,此算法对p指向的对象执行析构函数
+
+	//allocator分配未构造的内存
+	//分配的内存是未构造的,需要在此内存中构造对象,在新标准中,construct成员函数接受一个指针和0or多个额外的参数
+	//在给定的位置构造一个元素
+	int n = 10;
+	using std::string;
+	using std::cout;
+	using std::endl;
+	std::allocator<string> alloc;
+	auto const p = alloc.allocate(n);
+	auto q = p;
+	alloc.construct(q++);
+	alloc.construct(q++, 10, 'c');
+	alloc.construct(q++, "dddd");
+	//为了使用allocate返回的内存,必须使用construct构造对象,使用未构造内存,行为未定义
+	//当用完指针,必须对对象调用destroy来销毁
+	while (q != p)
+		alloc.destroy(--q);
+	//一旦元素被销毁,可以重新使用这部分内存也可归还给系统,释放内存通过调用deallocate完成
+	alloc.deallocate(p, n);
+	//deallocate的指针不能为空,必须指向由allocate分配的内存,而且传递给deallocate的大小参数
+	//必须与调用allocated分配内存时提供的大小参数一样
+	//因此,以上每个步骤都是紧密相关的,n,p,q
+
+	//拷贝和填充未初始化内存的算法
+	//标准库为allocator类定义了两个伴随算法,可以在未初始化内存中创建对象
+	//定义在头文件memory中
+	//uninitialized_copy(b, e, b2)  从迭代器b和e指出的输入范围中拷贝元素到迭代器b2指定的
+	//						未构造的原始内存中,b2指向的内存必须足够大,能容纳输入序列中元素的拷贝
+	//uninitialized_copy_n(b,n,b2)  从迭代器b指向的元素开始,拷贝n个元素到b2开始的内存中
+	//uninitialized_fill(b,e,t);  在迭代器b和e指定的原始内存范围中创建对象,对象的值均为t的拷贝
+	//uninitialized_fill_n(b,n,t); 从迭代器b指向的内存地址开始创建n个对象,b必须指向足够大的未
+	//			构造的原始内存
+	int test_un_size = 16;
+	std::vector<int> to_mem(10, 1);
+	std::allocator<int> test_uninit;
+	auto tu_p = test_uninit.allocate(test_un_size);
+	//使用uninitialized_copy系列指针都不够安全 unsafe编译器阻止
+	//auto qqq = std::uninitialized_copy_n(to_mem.cbegin(), to_mem.size(), tu_p);
+	//但是使用fill就不会unsafe
+	std::uninitialized_fill_n(tu_p, to_mem.size(), 6);
+	for (auto q = 0; q != to_mem.size(); ++q) {
+		cout << *(tu_p + q) << " "; // 10个6
+	}
+	cout << endl;
 }
+
+
+//类
+
 int main() {
 	//输入输出
 	//cin_cout_cerr_clog();
