@@ -1,4 +1,4 @@
-#ifndef TEXT_H
+Ôªø#ifndef TEXT_H
 #define TEXT_H
 #include <iostream>
 #include <sstream>
@@ -78,7 +78,7 @@ private:
 	string wanted_word;
 	size_t times;
 };
-//÷ÿ‘ÿ<<
+//ÈáçËΩΩ<<
 inline ostream& operator<<(ostream &os, const ReaderResult& result) {
 	os << "->" << result.wanted_word << " occurs " << result.times << " times" << endl;
 	int last_line = 0;

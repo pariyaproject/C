@@ -1,5 +1,5 @@
-#include "Text.h"
-//inlineº¯ÊıÖ»ÄÜ¶¨ÒåÔÚÓëÖ®Ïà¹ØµÄÍ·ÎÄ¼şÖĞ,²»ÄÜ¿çÎÄ¼ş ****
+ï»¿#include "Text.h"
+//inlineå‡½æ•°åªèƒ½å®šä¹‰åœ¨ä¸ä¹‹ç›¸å…³çš„å¤´æ–‡ä»¶ä¸­,ä¸èƒ½è·¨æ–‡ä»¶ ****
 ReaderResult TextReader::Search(string word)
 {
 	try {
@@ -19,15 +19,15 @@ void TextReader::Process()
 	istringstream line_stream;
 	int line_num = 0;
 	int times = 0;
-	line_vec->push_back("#"); //×÷ÎªµÚ0ĞĞÄÚÈİ
+	line_vec->push_back("#"); //ä½œä¸ºç¬¬0è¡Œå†…å®¹
 	while (getline(input, line)) {
 		++line_num;
 		//word part
 		line_stream.str(line);
 		while (line_stream >> word) {
-			//*****ÕâÀï×¢Òâ,·µ»ØÊÇauto&ÒıÓÃ,²»È»ÎŞ·¨¸ü¸Ä
+			//*****è¿™é‡Œæ³¨æ„,è¿”å›æ˜¯auto&å¼•ç”¨,ä¸ç„¶æ— æ³•æ›´æ”¹
 			auto &set_ptr = (*word_map)[word];
-			if (!set_ptr) {//´ËÊ±Ö¸ÕëÎª¿Õ,nullptr,Òò´ËĞèÒªreset
+			if (!set_ptr) {//æ­¤æ—¶æŒ‡é’ˆä¸ºç©º,nullptr,å› æ­¤éœ€è¦reset
 				set_ptr.reset(new multiset<int>);
 			}
 
