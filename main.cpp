@@ -23,6 +23,7 @@
 //class
 #include "bangumi_subject.h"
 #include "Test_class.h"
+#include "Detail_Class.h"
 //extern const int x ;
 //输入输出
 
