@@ -3587,69 +3587,187 @@ void test_dyn_array() {
 	//类似,delete将对象析构和内存释放组合在一块
 	//当分配一大块内存时,通常计划在这块内存上按需构造对象,但只在真正需要时才真正
 	//执行对象创建操作
-	//一般情况下,将内在分配和对象构造组合在一起可能会导致不必要的浪费
-	//
-	//allocator类
-	//标准库allocator类定义在头文件memory中
-	//它提供一种类型感知的内存分配方法,它分配的内存是原始的,未构造的
-	//
-	//allocator<T> a  //定义了一个名为a的allocator对象,可以为类型为T的对象分配内存
-	//a.allocate(n)  //分配一段原始的,未构造的内存,保存n个T对象
-	//a.deallocate(p,n)  //释放从T*指针p中地址开始的内存,这块内存保存了n个类型为T的对象
-	//						//p必须是一个先前由allocate返回的指针,且n必须是p创建时要求的大小
-	//					//在调用deallocate之前,用户必须对每个在这块内存中创建的对象调用destroy
-	//a.construct(p, args) //p必须是一个类型为T*的指针,指向一块原始内存:arg被传递给类型为
-	//					//T的构造函数,用来在p指向的内存中构造一个对象
-	//a.destroy(p)  //P是T*类型的指针,此算法对p指向的对象执行析构函数
+//一般情况下,将内在分配和对象构造组合在一起可能会导致不必要的浪费
+//
+//allocator类
+//标准库allocator类定义在头文件memory中
+//它提供一种类型感知的内存分配方法,它分配的内存是原始的,未构造的
+//
+//allocator<T> a  //定义了一个名为a的allocator对象,可以为类型为T的对象分配内存
+//a.allocate(n)  //分配一段原始的,未构造的内存,保存n个T对象
+//a.deallocate(p,n)  //释放从T*指针p中地址开始的内存,这块内存保存了n个类型为T的对象
+//						//p必须是一个先前由allocate返回的指针,且n必须是p创建时要求的大小
+//					//在调用deallocate之前,用户必须对每个在这块内存中创建的对象调用destroy
+//a.construct(p, args) //p必须是一个类型为T*的指针,指向一块原始内存:arg被传递给类型为
+//					//T的构造函数,用来在p指向的内存中构造一个对象
+//a.destroy(p)  //P是T*类型的指针,此算法对p指向的对象执行析构函数
 
-	//allocator分配未构造的内存
-	//分配的内存是未构造的,需要在此内存中构造对象,在新标准中,construct成员函数接受一个指针和0or多个额外的参数
-	//在给定的位置构造一个元素
-	int n = 10;
-	using std::string;
-	using std::cout;
-	using std::endl;
-	std::allocator<string> alloc;
-	auto const p = alloc.allocate(n);
-	auto q = p;
-	alloc.construct(q++);
-	alloc.construct(q++, 10, 'c');
-	alloc.construct(q++, "dddd");
-	//为了使用allocate返回的内存,必须使用construct构造对象,使用未构造内存,行为未定义
-	//当用完指针,必须对对象调用destroy来销毁
-	while (q != p)
-		alloc.destroy(--q);
-	//一旦元素被销毁,可以重新使用这部分内存也可归还给系统,释放内存通过调用deallocate完成
-	alloc.deallocate(p, n);
-	//deallocate的指针不能为空,必须指向由allocate分配的内存,而且传递给deallocate的大小参数
-	//必须与调用allocated分配内存时提供的大小参数一样
-	//因此,以上每个步骤都是紧密相关的,n,p,q
+//allocator分配未构造的内存
+//分配的内存是未构造的,需要在此内存中构造对象,在新标准中,construct成员函数接受一个指针和0or多个额外的参数
+//在给定的位置构造一个元素
+int n = 10;
+using std::string;
+using std::cout;
+using std::endl;
+std::allocator<string> alloc;
+auto const p = alloc.allocate(n);
+auto q = p;
+alloc.construct(q++);
+alloc.construct(q++, 10, 'c');
+alloc.construct(q++, "dddd");
+//为了使用allocate返回的内存,必须使用construct构造对象,使用未构造内存,行为未定义
+//当用完指针,必须对对象调用destroy来销毁
+while (q != p)
+alloc.destroy(--q);
+//一旦元素被销毁,可以重新使用这部分内存也可归还给系统,释放内存通过调用deallocate完成
+alloc.deallocate(p, n);
+//deallocate的指针不能为空,必须指向由allocate分配的内存,而且传递给deallocate的大小参数
+//必须与调用allocated分配内存时提供的大小参数一样
+//因此,以上每个步骤都是紧密相关的,n,p,q
 
-	//拷贝和填充未初始化内存的算法
-	//标准库为allocator类定义了两个伴随算法,可以在未初始化内存中创建对象
-	//定义在头文件memory中
-	//uninitialized_copy(b, e, b2)  从迭代器b和e指出的输入范围中拷贝元素到迭代器b2指定的
-	//						未构造的原始内存中,b2指向的内存必须足够大,能容纳输入序列中元素的拷贝
-	//uninitialized_copy_n(b,n,b2)  从迭代器b指向的元素开始,拷贝n个元素到b2开始的内存中
-	//uninitialized_fill(b,e,t);  在迭代器b和e指定的原始内存范围中创建对象,对象的值均为t的拷贝
-	//uninitialized_fill_n(b,n,t); 从迭代器b指向的内存地址开始创建n个对象,b必须指向足够大的未
-	//			构造的原始内存
-	int test_un_size = 16;
-	std::vector<int> to_mem(10, 1);
-	std::allocator<int> test_uninit;
-	auto tu_p = test_uninit.allocate(test_un_size);
-	//使用uninitialized_copy系列指针都不够安全 unsafe编译器阻止
-	//auto qqq = std::uninitialized_copy_n(to_mem.cbegin(), to_mem.size(), tu_p);
-	//但是使用fill就不会unsafe
-	std::uninitialized_fill_n(tu_p, to_mem.size(), 6);
-	for (auto q = 0; q != to_mem.size(); ++q) {
-		cout << *(tu_p + q) << " "; // 10个6
-	}
-	cout << endl;
+//拷贝和填充未初始化内存的算法
+//标准库为allocator类定义了两个伴随算法,可以在未初始化内存中创建对象
+//定义在头文件memory中
+//uninitialized_copy(b, e, b2)  从迭代器b和e指出的输入范围中拷贝元素到迭代器b2指定的
+//						未构造的原始内存中,b2指向的内存必须足够大,能容纳输入序列中元素的拷贝
+//uninitialized_copy_n(b,n,b2)  从迭代器b指向的元素开始,拷贝n个元素到b2开始的内存中
+//uninitialized_fill(b,e,t);  在迭代器b和e指定的原始内存范围中创建对象,对象的值均为t的拷贝
+//uninitialized_fill_n(b,n,t); 从迭代器b指向的内存地址开始创建n个对象,b必须指向足够大的未
+//			构造的原始内存
+int test_un_size = 16;
+std::vector<int> to_mem(10, 1);
+std::allocator<int> test_uninit;
+auto tu_p = test_uninit.allocate(test_un_size);
+//使用uninitialized_copy系列指针都不够安全 unsafe编译器阻止
+//auto qqq = std::uninitialized_copy_n(to_mem.cbegin(), to_mem.size(), tu_p);
+//但是使用fill就不会unsafe
+std::uninitialized_fill_n(tu_p, to_mem.size(), 6);
+for (auto q = 0; q != to_mem.size(); ++q) {
+	cout << *(tu_p + q) << " "; // 10个6
+}
+cout << endl;
 }
 
 
 //类
+
+
+//重载运算与类型转换
+//几元运算符就有几个参数
+//如果一个运算符是成员函数,则它的第一个运算对象绑定到隐式的this指针上
+//this绑定到左侧运算对象上
+//对于一个运算符函数来说,它或者是类的成员,或者至少含有一个类类型的参数
+//int operator+(int, int)不能为int重定义内置的运算符
+//只能重载而不能发明一个操作符
+//不能被重载的运算符 :: .* . ?:
+//data1 + data2;
+//operator+(data1, data2); 两者等价
+//某些运算符不应被重载,一些操作符影响求值顺序 && || ,
+//也不要重载 &
+
+//赋值(=) 下标([]) 调用(())和成员访问箭头(->)运算符必须是成员
+//复合赋值一般也是成员
+//改变对象状态的运算符 递增 递减 解引用 通常是成员
+//具有对称的运算通常是普通的非成员函数
+
+//输入输出运算符必须是非成员函数,否则它的左侧运算对象是类的一个对象 而不是cout之类的
+//输入结束后应当if(cin)检查是否有错误输入,否则重置当前类为默认状态,并且输入的状态需要重置
+//如果类同时定义了算术运算符和相关的复合赋值运算符,则通常情况下应该使用复合赋值来实现算术运算符
+//同理对于== 和 != 其中一个调用另一个来实现
+//一般关系运算符定义<
+//<要满足:1.如果类同时含有==运算符,则定义一种关系令其与==保持一致:特别是如果两个对象
+//是!=的则一个对象应该<另一个对象
+
+//赋值运算
+//标准库除了拷贝,移动赋值运算外还提供了第三种赋值运算符:花括号
+
+//StrVec &operator=(std::initializer_list<std::string>);
+
+//不论形参类型是什么,赋值运算符必须定义为成员函数
+
+//下标运算符
+//std::string& operator[](std::size_t n)
+//{return elements[n];}
+//const std::string& operator[](std::size_t n) const
+//{return elements[n];}
+
+//前置的递增运算符
+//StrBlobPtr & operator++();
+//后置的递增运算符
+//StrBlobPtr operator++(int); //不被使用的int参数区别两者
+
+//注意两者返回的类型不同,后置返回一个拷贝,前置返回一个引用
+//同时尽量在后置中使用前置实现
+
+//重载的箭头运算符必须返回类的指针或自定义了箭头运算符的某个类的对象[复杂]
+
+//函数调用运算符
+//int operator()(int val) const{return 1;}
+//如果类定义了调用运算符,则该类的对象称作函数对象,因为这些对象的行为像函数一样
+
+//含有状态的函数对象类
+
+//lambda是函数对象
+
+//标准库定义的函数对象
+//p510
+//例如greater<Type> 可以作为sort的自定义算法   ,greater<string>());
+//
+
+//标准库function类型
+//function定义在functional头文件中
+//function<T> f; 用来存储可调用对象的空function,这些可调用对象的调用形式应该与函数类型T相同(retType(args))
+//function<T> f(nullptr); 显式构造一个空function
+//function<T> f(obj); 在f中存储可调用对象obj的副本
+//f 将f作为条件:当f含有一个可调用对象时为真
+//f(args) 调用f中的对象,参数是args
+//定义为function<T>的成员的类型
+//resutl_type 该function类型的可调用对象返回的类型
+//argument_type  当T有一个或两个实参时定义的类型,如果T只有一个实参,则argument_type量该类型的同义词
+//first_argument_type  如果T有两个实参,则first_argument_type和second_argument_type分别代表两个实参的类型
+//second_argument_type
+
+//function是一个模板
+//function<int(int, int)> f1 = add;  //函数指针
+//function<int(int, int)> f2 = divide();  //函数对象类的对象
+//function<int(int, int)> f3 = [](int i, int j) {return i*j};  //lambda
+
+//cout << f1(4, 2)<<endl;
+//使用这个function类型可以重新定义map:
+//map<string, function<int(int,int)>> binops;   
+//binops = { {"+",add},
+//			{"/", divide()}}
+//binops["+"](10,5);
+
+//重载函数与function
+//不能(直接)将重载函数的名字存入function类型的对象中
+//只能使用对应的函数指针赋值,或使用lambda表达式
+
+//重载,类型转换和运算符
+//转换构造函数和类型转换运算符共同定义了类类型转换,这样的转换有时也称作用户定义的类型转换
+//类型转换运算符,是类的一种特殊成员函数,负责将一个类类型的值转换成其他类型
+//类型转换函数的一般形式如下:
+//operator type() const;
+//其中type表示某种类型,类型转换运算符可以面向任意类型(除了void之外)进行定义,只要该类型
+//能作为函数的返回类型,因此,不允许转换成数组或者函数类型,但允许转换成指针类型/引用类型
+//类型转换运算符没有显式的返回类型,也没有形参,而且必须定义成类的成员函数
+//一般定义为const
+//因为类型转换运算符是隐式执行的,所以无法给这些函数传递实参,而且也没有一个返回类型
+//编译器一次只能执行一个用户定义的类型转换
+
+//{//某类中
+//    operator int() const {return 5;}
+//}
+
+//尽量少用类型转换运算符  有用的是operator bool() const{}
+//
+//int i = 42;
+//std::cin << i; //如果cin可以隐式转换为bool则编译通过(istream=>bool=>int=>位运算)
+
+//显式地类型转换 c++ 11
+
+
+
 
 int main() {
 	//输入输出
