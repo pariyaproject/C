@@ -19,6 +19,10 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <tuple>
+#include <bitset>
+#include <regex>
+#include <random>
 //包含来自标准库的头文件时使用<>否则""
 //class
 #include "bangumi_subject.h"
@@ -3855,7 +3859,7 @@ public:
 	Bulik_quote() = default;
 	Bulik_quote(const std::string&, double, std::size_t, double);
 	//覆盖基类的函数版本
-	double net_price(std::size_t n) const override;
+	double net_price(std::size_t n) const override { return 1.0; }
 private:
 	std::size_t min_qty = 0;
 	double discount = 0.0;
@@ -4181,6 +4185,124 @@ int compare(const T &v1, const T &v2) {
 //与其他类相同,类模板可以声明static成员
 
 
+
+//tuple
+void test_tuple() {
+	std::tuple<int, bool> x;
+	std::tuple<bool, int, int> y(true, 5, 6);
+	std::make_tuple(123, "dsfd", 'd', 55);
+	auto d = std::get<2>(y); //6
+	std::cout << d <<std::endl;
+	// x1 relop t2
+	
+	std::tuple_size<decltype(y)>::value;
+	std::tuple_element<1, decltype(y)>::type;
+}
+//bitset
+//
+
+void test_bitset() {
+	//初始化bitset
+	std::bitset<10> b; //10位,每位均为0 constexpr表达式
+	//bitset<n> b(u) ;   b是u的低位拷贝
+	//用unsigned值初始化bitset  高位会被置为0
+	std::bitset<13> bitvec1(0xbeef);
+	std::bitset<128> bitvec3(~0ULL);
+	//从string初始化bitset
+	using std::string;
+	using std::bitset;
+	bitset<32> bitvec4("1100"); //000..001100
+	string str("111111100000000");
+	bitset<32> vec5(str, 5, 4);//从str[5]开始的四个二进制位1100
+	bitset<32> bitvec6(str, str.size() - 4);//使用最后4个字符
+	//
+	b.any();
+	b.all();
+	b.none();
+	b.count();
+	b.size();
+	b.test(5);
+	b.set(6, true);
+	b.set(7);
+	b.reset();
+	b.reset(7);
+	b.flip(8);
+	b.flip();
+	b[4];
+	b.to_ulong();
+	b.to_string("d", "a"); //0->d 1->a
+
+}
+
+//正则表达式
+void test_regular() {
+	//RE库定义在regex中
+	std::regex x;//表示有一个正则表达式的类
+	//std::regex_search()  //寻找第一个与正则匹配的子序列
+	//regex_match //将一个字符序列与一个正则表达式匹配
+	//regex_replace //使用给定格式替换一个正则表达式
+	//sregex_iterator  //迭代器适配器,调用regex_search来遍历一个string中所有匹配的子串
+	//smatch  //容器类,保存在string中搜索的结果
+	//ssub_match  //string中匹配的子表达式的结果
+	using std::string;
+	using std::regex;
+	using std::smatch;
+	//例子
+	string pattern("[^c]ei");
+	pattern = "[[:alpha:]]*" + pattern + "[[:alpha:]]*";
+	regex r(pattern);
+	smatch results;
+
+	string test_str = "receipt freind thif receive";
+
+	if (regex_search(test_str, results, r))
+		std::cout << results.str() << std::endl;
+}
+//随机数
+//c++应该使用default_random_engine类和恰当的分布类
+void test_random() {//头文件random中
+	std::default_random_engine e;//生成随机无符号数//可以使用seed
+	for (size_t i = 0; i < 10; ++i) {
+		std::cout << e() << " ";
+	}
+	//为了得到正确的范围使用分布类型的对象
+	std::uniform_int_distribution<unsigned> u(0, 9);
+	std::cout << std::endl;
+	for (size_t i = 0; i < 10; ++i) {
+		std::cout << u(e) << " ";
+	}
+}
+//IO库Next
+void test_IO() {
+	//标准库定义了一组操纵符修改流的格式状态
+	//如endl
+	//如boolalpha cout<<boolalpha<<true;  //true
+	//为了取消boolalpha使用noboolalpha
+	//指定整型的进制 <<oct<<22  <<hex<<20 <<dec 20
+	//指定输出进制  <<showbase  <<noshowbase  0x222
+
+	//指定打印精度  setprecision和其他接受参数的操纵符定义在头文件iomanip中
+
+}
+//命名空间
+//每个命名空间都是一个作用域
+//定义:首先是关键字namespace 随后是命名空间的名字
+//在命名空间名字后面是一系列由花括号括起来的声明和定义
+//命名空间结束后无需;
+//命名空间可以是不连续的
+//内联的inline命名空间可以被外层命名空间直接使用
+//namespaces primer = cplusplus_primer;
+
+
+//枚举类型
+//c++11引入了限定作用域的枚举类型
+//关键字enum class (或enum sturct)随后是枚举类型名字以及用花括号括起来的以逗号隔开
+//的枚举成员,最后是一个分号
+enum class open_modes{input,ouput,append};
+//定义不限定作用域的枚举类型时省略关键字class or sturct,枚举类型的名字是可选的
+
+//union:一种节省空间的类
+//可以是匿名的
 int main() {
 	//输入输出
 	//cin_cout_cerr_clog();
@@ -4247,7 +4369,11 @@ int main() {
 	//test_unordered_container();
 	//test_dyn_mem();
 	//test_smart_pointer();
-	test_dyn_array();
+	//test_dyn_array();
+	//test_tuple();
+	//test_regular();
+	//test_random();
+	test_IO();
 	system("pause");
 	return 0;
 }
