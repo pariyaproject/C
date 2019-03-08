@@ -341,7 +341,7 @@ void test_string() {
 	//getline和cin一样会返回流参数 例如 while(getline(std::cin,s1));
 	getline(std::cin, s1);//从输入流读取一行赋值给s1 相比cin>>s1只忽略空白字符,但换行依旧不存储(但有读入标志结束)
 	//如果一开始就是换行符那么将会是一个空字符
-	//s1 = { '\0' };
+	//s1 != { '\0' };\0会被抛弃
 	if (!s1.empty())//注意 空格 \0不是一个空字符()
 		cout << "getline=" + s1 + "=end" << endl;
 	//但是cin>>s1就不会以换行符结束,也就是说cin>>不可能出现一个空字符,必须录入一个非空白字符才会算完成这个操作
@@ -358,10 +358,10 @@ void test_string() {
 	//auto len = s1.size();
 	//string::size_type x;
 	cout << s1.size() << endl;
-	cout << test1 << " " << test1.size() << endl;//size返回string中字符的个数
-	cout << test2 << " " << test2.size() << endl;
-	cout << test3 << " " << test3.size() << endl;
-	cout << test4 << " " << test4.size() << endl;
+	cout << test1 << " " << test1.size() << endl;//3个//size返回string中字符的个数
+	cout << test2 << " " << test2.size() << endl;//3个
+	cout << test3 << " " << test3.size() << endl;//4个
+	cout << test4 << " " << test4.size() << endl;//4个
 	//但是使用 c_str() data()将string对象转换为const char *时最后一个字符是'\0'
 	string blan;
 	cout << "空白=" << blan[blan.size()] << "=ddd" << endl;
@@ -996,9 +996,9 @@ void test_func(int a) {
 	std::string x = "ddd";
 	const std::string cc = "ccc";
 	find_char(x);
-	find_char(cc); //只有 const string& 才合法
+	find_char(cc); //只有 const string& 才合法, 如果形参是string &则报错,同下
 	find_char("ddd"); //只有 const string& 才合法
-	//实参赋值完全可以看成一个普通的初始化语句 string &s = x;const string &s = "ddd"
+	//实参赋值完全可以看成一个普通的初始化语句const string &s = x;const string &s = "ddd"
 
 
 	//数组形参
@@ -4323,7 +4323,7 @@ int main() {
 	//std::cout << x;
 	//test_using();
 	//cout << "end"; //using在块位域中声明只在其中有效
-	//test_string();
+	test_string();
 	//test_vector();
 	//test_array();
 	//test_c_cpp_string();
@@ -4373,7 +4373,7 @@ int main() {
 	//test_tuple();
 	//test_regular();
 	//test_random();
-	test_IO();
+	//test_IO();
 	system("pause");
 	return 0;
 }
