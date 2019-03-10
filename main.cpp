@@ -28,6 +28,7 @@
 #include "bangumi_subject.h"
 #include "Test_class.h"
 #include "Detail_Class.h"
+#include "TestConst.h"
 //extern const int x ;
 //输入输出
 
@@ -4303,6 +4304,8 @@ enum class open_modes{input,ouput,append};
 
 //union:一种节省空间的类
 //可以是匿名的
+//const int const_int = 897;
+//extern const int const_int_ex;
 int main() {
 	//输入输出
 	//cin_cout_cerr_clog();
@@ -4323,7 +4326,7 @@ int main() {
 	//std::cout << x;
 	//test_using();
 	//cout << "end"; //using在块位域中声明只在其中有效
-	test_string();
+	//test_string();
 	//test_vector();
 	//test_array();
 	//test_c_cpp_string();
@@ -4374,6 +4377,10 @@ int main() {
 	//test_regular();
 	//test_random();
 	//test_IO();
+	//TestConst();
+	//TestConstInClass();
+	TestConstInBGMXX();
+	std::cout << const_int << std::endl;
 	system("pause");
 	return 0;
 }

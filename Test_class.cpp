@@ -1,4 +1,12 @@
 ﻿#include "Test_class.h"
+//extren不能少,否则链接错误
+//体现了两点:1.const只在本文件中有效[如果前后有直接的include就不叫本文件,没有include才是独立的文件]
+//2.能通过extren关键字连接两个独立文件中的同名const变量,但只能定义一次,可以重复声明,不论定义声明都要加extern关键字
+extern const int const_int = 999;
+void TestConstInBGMXX() {
+	std::cout << __FILE__ <<
+		" : " << const_int << std::endl;
+}
 //类外部定义成员函数
 //请注意定义必须和声明匹配,也包括形参后的const关键字
 //同名加上类的域 New_bangumi_data::
@@ -80,3 +88,5 @@ bool TestStatic::bReady = false;
 std::string TestStatic::msg = "222";
 int TestStatic::id = 999;
 static const int period  = 40;
+
+

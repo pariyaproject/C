@@ -1,8 +1,13 @@
-﻿#include "bangumi_subject.h"
+﻿#pragma once
+#include "bangumi_subject.h"
 #include <iostream>
 using std::istream;
 using std::ostream;
 extern const int x = 10;
+// void TestConstInBGMXX() {
+//	std::cout << __FILE__ <<
+//		" : " << const_int << std::endl;
+//}
 int Bangumi_subject::Id()const
 {
 	//return id;

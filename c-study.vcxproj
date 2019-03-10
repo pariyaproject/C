@@ -133,6 +133,7 @@
     <ClInclude Include="bangumi_subject.h" />
     <ClInclude Include="Detail_Class.h" />
     <ClInclude Include="Sales_iteam.h" />
+    <ClInclude Include="TestConst.h" />
     <ClInclude Include="Test_class.h" />
   </ItemGroup>
   <ItemGroup>

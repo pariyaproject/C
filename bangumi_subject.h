@@ -1,4 +1,5 @@
-﻿#ifndef BANGUMI_SUBJECT_H
+﻿#pragma once
+#ifndef BANGUMI_SUBJECT_H
 #define BANGUMI_SUBJECT_H
 //pragma once等价于ifndef ... endif,但ifndef是c++标准，支持更多的编译器
 //但是有命名冲突的危险并且编译相对较慢
@@ -6,6 +7,14 @@
 //关于iostream已经内置了条件编译宏用来防止重复定义
 #include <iostream>
 //bangumi条目类
+extern const int const_int;
+//extern const int const_int_ex;
+//[注意]有cpp和h的情况下,头文件不能包含定义的变量和函数体,cpp中一包含就会导致重定义
+//extern void TestConstInBGMXX() {
+//	std::cout << __FILE__ <<
+//		" : " << const_int << std::endl;
+//}
+extern void TestConstInBGMXX();
 extern const int x ;
 class Bangumi_subject
 {

@@ -1,4 +1,4 @@
-﻿
+﻿#pragma once
 #ifndef TEST_CLASS_H
 #define TEST_CLASS_H
 #include<iostream>
@@ -14,6 +14,15 @@
 
 //成员函数的声明必须在类的内部,它的定义则可以在内部或者外部
 //而作为接口组成部分的非成员函数 如 read print,它们的定义和声明都在外部
+//extern const int const_int;
+//extern const int const_int_ex = 555;
+//extern const int const_int ;
+//extern const int const_int_ex;
+//void TestConstInClass() {
+//	std::cout << __FILE__ <<
+//		" : " << const_int << std::endl;
+//}
+const int jkljkl = 1;
 class EPS;
 class Test_class
 {
